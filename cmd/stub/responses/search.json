@@ -1,0 +1,410 @@
+{
+    "page": 1,
+    "results": [
+        {
+            "adult": false,
+            "backdrop_path": null,
+            "genre_ids": [
+                18
+            ],
+            "id": 16377,
+            "origin_country": [
+                "US"
+            ],
+            "original_language": "en",
+            "original_name": "Breaking Point",
+            "overview": "Breaking Point is an American medical drama that aired on ABC from September 16, 1963, to April 27, 1964, continuing in rebroadcasts until September 7. The series, which was a spinoff of Ben Casey, stars Paul Richards and Eduard Franz. The series was created by Meta Rosenberg.",
+            "popularity": 18.0442,
+            "poster_path": "/zgb5jQ6wOreapkVXSdAH5hDmVd1.jpg",
+            "first_air_date": "1963-09-16",
+            "name": "Breaking Point",
+            "vote_average": 7.25,
+            "vote_count": 4
+        },
+        {
+            "adult": false,
+            "backdrop_path": "/gc8PfyTqzqltKPW3X0cIVUGmagz.jpg",
+            "genre_ids": [
+                18,
+                80
+            ],
+            "id": 1396,
+            "origin_country": [
+                "US"
+            ],
+            "original_language": "en",
+            "original_name": "Breaking Bad",
+            "overview": "Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer and given a prognosis of only two years left to live. He becomes filled with a sense of fearlessness and an unrelenting desire to secure his family's financial future at any cost as he enters the dangerous world of drugs and crime.",
+            "popularity": 141.2799,
+            "poster_path": "/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg",
+            "first_air_date": "2008-01-20",
+            "name": "Breaking Bad",
+            "vote_average": 8.926,
+            "vote_count": 15738
+        },
+        {
+            "adult": false,
+            "backdrop_path": null,
+            "genre_ids": [
+                18,
+                9648
+            ],
+            "id": 232533,
+            "origin_country": [
+                "CN"
+            ],
+            "original_language": "zh",
+            "original_name": "绝命卦师",
+            "overview": "During the Ming Dynasty, the emperor sets out for Xinjiang to advocate peace. Shortly after his absence, mysterious occurrences plague the palace and Daoist Tian Mu Tong is called to cast out demons. Together with eunuch Xiao Mo Gu and Jin Yi Wei leader Yun Xiang Rong, Mu Tong uncovers deep dark secrets and conspiracies hidden within conspiracies.",
+            "popularity": 3.8089,
+            "poster_path": "/n8dKkbPkdEPFCFmjNvrUl1gUAYr.jpg",
+            "first_air_date": "2016-04-11",
+            "name": "Breaking Bad Fortune Teller",
+            "vote_average": 7.5,
+            "vote_count": 1
+        },
+        {
+            "adult": false,
+            "backdrop_path": null,
+            "genre_ids": [],
+            "id": 27444,
+            "origin_country": [
+                "GB"
+            ],
+            "original_language": "en",
+            "original_name": "Breaking Point",
+            "overview": "A secret service agent is assigned to protect an expert metallurgist. All five episodes are believed to be lost.",
+            "popularity": 1.8574,
+            "poster_path": null,
+            "first_air_date": "1966-10-22",
+            "name": "Breaking Point",
+            "vote_average": 0,
+            "vote_count": 0
+        },
+        {
+            "adult": false,
+            "backdrop_path": "/fILz3oUoOq8QMfGqs9U5iXZ828p.jpg",
+            "genre_ids": [
+                18
+            ],
+            "id": 129887,
+            "origin_country": [
+                "KR"
+            ],
+            "original_language": "ko",
+            "original_name": "지금, 헤어지는 중입니다",
+            "overview": "Will tell stories of emotional love and breakups. Ha Young-eun, a manager of the design team at a fashion label who is a trendy and intelligent realist. Yoon Jae-guk, a wealthy and popular freelancer photographer who also has the brains and looks. Hwang Chi-sook is a director of the fashion label’s design team who attended high school with Ha Young-eun and Seok Do-hoon is a skilled PR company CEO.",
+            "popularity": 7.8261,
+            "poster_path": "/dUn67I9Pzpb2XNz6HxSCa26T0rD.jpg",
+            "first_air_date": "2021-11-12",
+            "name": "Now, We Are Breaking Up",
+            "vote_average": 6.1,
+            "vote_count": 36
+        },
+        {
+            "adult": false,
+            "backdrop_path": "/uvg18tl6b8PU4YUiQ7F9EczmzPC.jpg",
+            "genre_ids": [
+                35
+            ],
+            "id": 203942,
+            "origin_country": [
+                "US"
+            ],
+            "original_language": "en",
+            "original_name": "Breaking News: No Laugh Newsroom",
+            "overview": "In this newsroom, breaking means losing. Our reporters don't know what's about to be on the teleprompter, and every laugh is a point against them.",
+            "popularity": 26.2837,
+            "poster_path": "/upDguFeVhmMwGXeayxUwww6vzXQ.jpg",
+            "first_air_date": "2018-07-07",
+            "name": "Breaking News: No Laugh Newsroom",
+            "vote_average": 8.8,
+            "vote_count": 6
+        },
+        {
+            "adult": false,
+            "backdrop_path": "/jCWMWclOVImgkpZgryFd6AvYIu5.jpg",
+            "genre_ids": [
+                16,
+                10759,
+                10765
+            ],
+            "id": 79481,
+            "origin_country": [
+                "CN"
+            ],
+            "original_language": "zh",
+            "original_name": "斗破苍穹",
+            "overview": "In a land where no magic is present. A land where the strong make the rules and weak have to obey. A land filled with alluring treasures and beauty, yet also filled with unforeseen danger. Three years ago, Xiao Yan, who had shown talents none had seen in decades, suddenly lost everything. His powers, his reputation, and his promise to his mother. What sorcery has caused him to lose all of his powers? And why has his fiancee suddenly shown up?",
+            "popularity": 99.0847,
+            "poster_path": "/a9bJPlezCXF6u0siDxf7cZaSXaJ.jpg",
+            "first_air_date": "2017-01-07",
+            "name": "Fights Break Sphere",
+            "vote_average": 8.283,
+            "vote_count": 46
+        },
+        {
+            "adult": false,
+            "backdrop_path": null,
+            "genre_ids": [
+                18
+            ],
+            "id": 70991,
+            "origin_country": [
+                "SI"
+            ],
+            "original_language": "sl",
+            "original_name": "Več po oglasih",
+            "overview": "It represents the dynamics of the events that lead to the \"great stories\" to the media.",
+            "popularity": 6.5343,
+            "poster_path": null,
+            "first_air_date": "2016-11-20",
+            "name": "After Breaking News Already",
+            "vote_average": 0,
+            "vote_count": 0
+        },
+        {
+            "adult": false,
+            "backdrop_path": "/acZMb0W3IwdSCnMeqTGK9lc0OEG.jpg",
+            "genre_ids": [
+                18
+            ],
+            "id": 76701,
+            "origin_country": [
+                "HK"
+            ],
+            "original_language": "cn",
+            "original_name": "今生無悔",
+            "overview": "In the early 90's Ching Long, a young rebellious man who moved from Hong Kong to Taiwan against his father's wishes, and his best friend Ko Tin Chun, who is a successful young architect. Ching Long returns to Hong Kong working manual labour jobs and also as a stunt double. His family consists of his son, his father, and younger sister. The story revolves around Long and misunderstanding with his father as well as his romantic relationships with a Vietnamese refugee Chin Kiu and his sister's best friend, Sum Mun Yee.",
+            "popularity": 10.8528,
+            "poster_path": "/g3gdHJSLXghI3MKczGsbbv0mzUd.jpg",
+            "first_air_date": "1991-05-13",
+            "name": "The Breaking Point",
+            "vote_average": 0,
+            "vote_count": 0
+        },
+        {
+            "adult": false,
+            "backdrop_path": "/e1OGESutD3wBRoHw3I280v6L5Ux.jpg",
+            "genre_ids": [
+                80
+            ],
+            "id": 132158,
+            "origin_country": [
+                "TH"
+            ],
+            "original_language": "th",
+            "original_name": "มหานครเมืองลวง",
+            "overview": "The six-episode series is centered around the wild world of Bangkok's road rescue services and Wanchai who is newly arrived in Bangkok and must unravel a city-wide conspiracy alongside a young, upstart journalist.",
+            "popularity": 6.0583,
+            "poster_path": "/nAru8tj4RXbLzDL3r89QoVyP6FY.jpg",
+            "first_air_date": "2021-09-23",
+            "name": "Bangkok Breaking",
+            "vote_average": 6.7,
+            "vote_count": 59
+        },
+        {
+            "adult": false,
+            "backdrop_path": "/ksxxccr3pg60XILX2n7dzXPtDGN.jpg",
+            "genre_ids": [
+                99
+            ],
+            "id": 258154,
+            "origin_country": [
+                "AR"
+            ],
+            "original_language": "es",
+            "original_name": "Ángel Di María: Romper la pared",
+            "overview": "From his humble origins to becoming champion of the world, this documentary series recounts the life and career of the iconic Argentinian soccer player.",
+            "popularity": 3.3023,
+            "poster_path": "/fH6EydLuyaXTdwGVp5RnjM7kwgz.jpg",
+            "first_air_date": "2024-09-12",
+            "name": "Ángel Di María: Breaking Down the Wall",
+            "vote_average": 8.15,
+            "vote_count": 20
+        },
+        {
+            "adult": false,
+            "backdrop_path": "/znIHNPykXGbbZ3uVkX8m0t1i392.jpg",
+            "genre_ids": [
+                18
+            ],
+            "id": 203209,
+            "origin_country": [
+                "PH"
+            ],
+            "original_language": "tl",
+            "original_name": "Bolera",
+            "overview": "Joni, a promising street-smart pool-hustling girl, who fights her way from the slums to get a shot at becoming a pool champion in the male-dominated world of billiards.\n\nAs Joni continues to bust balls on her way to the top, her impending blindness that might ruin her dream of becoming the first woman champion in a mixed-gender billiards tournament is on the line.",
+            "popularity": 10.0753,
+            "poster_path": "/5Mb0l6aSaPUdxOdlP130WlVFBzO.jpg",
+            "first_air_date": "2022-05-30",
+            "name": "Break Shot",
+            "vote_average": 0,
+            "vote_count": 0
+        },
+        {
+            "adult": false,
+            "backdrop_path": "/j26KgSNWdeQRgkZKzNNlO0xNsue.jpg",
+            "genre_ids": [
+                99,
+                9648
+            ],
+            "id": 6391,
+            "origin_country": [
+                "US"
+            ],
+            "original_language": "en",
+            "original_name": "Breaking the Magician's Code: Magic's Biggest Secrets Finally Revealed",
+            "overview": "The Masked Magician returns to television to defy his fellow conjurers and disclose the tricks that have captivated audiences for centuries. Nowhere else has a magician dared to expose the secrets behind the world's most mystifying illusions.",
+            "popularity": 11.5444,
+            "poster_path": "/kQNTlwTUEBmwwTYjU9OPgpL2QtN.jpg",
+            "first_air_date": "2008-10-02",
+            "name": "Breaking the Magician's Code: Magic's Biggest Secrets Finally Revealed",
+            "vote_average": 7.7,
+            "vote_count": 143
+        },
+        {
+            "adult": false,
+            "backdrop_path": "/dZvEUw4fGGww9wfPyuJXvUKRgJ9.jpg",
+            "genre_ids": [
+                80,
+                9648
+            ],
+            "id": 202253,
+            "origin_country": [
+                "CN"
+            ],
+            "original_language": "zh",
+            "original_name": "暗夜行者",
+            "overview": "Luo Xiang, a former narcotics agent, faked his death during an undercover operation. Five years later, he's living under a new name, but needs to pretend to be his old self and once again infiltrate the drug cartel, dealing with his former lover, brothers and enemies, to finally successfully complete the mission and find out who's pulling the strings.",
+            "popularity": 10.5255,
+            "poster_path": "/1ohvGRQTffDeb91LqQrnZ1GtaXs.jpg",
+            "first_air_date": "2022-05-22",
+            "name": "Day Breaker",
+            "vote_average": 5.7,
+            "vote_count": 3
+        },
+        {
+            "adult": false,
+            "backdrop_path": null,
+            "genre_ids": [
+                18
+            ],
+            "id": 10728,
+            "origin_country": [
+                "US"
+            ],
+            "original_language": "en",
+            "original_name": "Breaking News",
+            "overview": "Breaking News is an American drama television series about the fictional Milwaukee-based 24-hour cable news television network I-24, with the motto 'Around the Clock, Around the World.' The series premiered July 17, 2002, on Bravo.",
+            "popularity": 19.4256,
+            "poster_path": "/9JA2qZcOeOIjczg6ESyLE1of4bT.jpg",
+            "first_air_date": "2002-07-17",
+            "name": "Breaking News",
+            "vote_average": 5,
+            "vote_count": 1
+        },
+        {
+            "adult": false,
+            "backdrop_path": "/pUpC160iPTBpiZ2ea8QWlOz3E1T.jpg",
+            "genre_ids": [],
+            "id": 108003,
+            "origin_country": [
+                "HK"
+            ],
+            "original_language": "cn",
+            "original_name": "浪濺長堤",
+            "overview": "",
+            "popularity": 1.2936,
+            "poster_path": "/eBeByPHQUUGTvIjCLYrDTLZ0VMY.jpg",
+            "first_air_date": "1980-08-11",
+            "name": "Heart Break At Long Beach",
+            "vote_average": 0,
+            "vote_count": 0
+        },
+        {
+            "adult": false,
+            "backdrop_path": "/2V3ifhCtIIUH6E555Lae0BmYkn5.jpg",
+            "genre_ids": [
+                18
+            ],
+            "id": 221633,
+            "origin_country": [
+                "JP"
+            ],
+            "original_language": "ja",
+            "original_name": "夫婦が壊れるとき",
+            "overview": "",
+            "popularity": 9.4718,
+            "poster_path": "/j17q0jArRXYerykxj7p3KYw3503.jpg",
+            "first_air_date": "2023-04-07",
+            "name": "When a Couple Breaks Up",
+            "vote_average": 0,
+            "vote_count": 0
+        },
+        {
+            "adult": false,
+            "backdrop_path": "/ymH8WUhZTun7vLejHAj9iq0koTk.jpg",
+            "genre_ids": [
+                10763,
+                35
+            ],
+            "id": 84209,
+            "origin_country": [
+                "SE"
+            ],
+            "original_language": "en",
+            "original_name": "Breaking News med Jessica Almenäs",
+            "overview": "Talkshow with host Jessica Almenäs",
+            "popularity": 8.4618,
+            "poster_path": "/io0uAnGkw4Eblwym8LDavLWXy87.jpg",
+            "first_air_date": "2018-11-19",
+            "name": "Breaking News with Jessica Almenäs",
+            "vote_average": 0,
+            "vote_count": 0
+        },
+        {
+            "adult": false,
+            "backdrop_path": "/1bK0VjhrzPRhRQXP8irOuShlveP.jpg",
+            "genre_ids": [
+                18
+            ],
+            "id": 46568,
+            "origin_country": [
+                "KR"
+            ],
+            "original_language": "ko",
+            "original_name": "커플브레이킹",
+            "overview": "Park Han Byul and Park Kwang Hyun star in this bubbly drama about a committed couple who realize they might not belong together at all. Jeong-seok and Yeo-kyung have been dating for years. Jeong-seok is uncultured and poor, while Yeo-kyung is polished and rich. They both begin to feel dissatisfied, and then they both meet someone else. Can true love overcome habit? Couple Breaking is a light-hearted four-episode mini about romantic switcheroos.",
+            "popularity": 5.6104,
+            "poster_path": "/as5r4xb6QhJs2hAt2iO3iJzogej.jpg",
+            "first_air_date": "2007-09-27",
+            "name": "Couple Breaking",
+            "vote_average": 1.8,
+            "vote_count": 4
+        },
+        {
+            "adult": false,
+            "backdrop_path": null,
+            "genre_ids": [
+                35
+            ],
+            "id": 55313,
+            "origin_country": [
+                "SE"
+            ],
+            "original_language": "sv",
+            "original_name": "Breaking News med Filip & Fredrik",
+            "overview": "",
+            "popularity": 12.6414,
+            "poster_path": "/ulHNOM0BGaAcRTmtSESk8V07lQN.jpg",
+            "first_air_date": "2011-08-22",
+            "name": "Breaking News med Filip & Fredrik",
+            "vote_average": 6,
+            "vote_count": 1
+        }
+    ],
+    "total_pages": 8,
+    "total_results": 158
+}
