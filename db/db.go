@@ -68,7 +68,20 @@ func Setup() {
 	_, err = Connection.Exec(`CREATE TABLE IF NOT EXISTS user_shows (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER, 
-		show_id INTEGER
+		show_id INTEGER, 
+		UNIQUE(user_id, show_id)
+    );`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Create user_seasons table
+	_, err = Connection.Exec(`CREATE TABLE IF NOT EXISTS user_seasons (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+		user_id INTEGER, 
+		show_id INTEGER, 
+		season_number INTEGER, 
+		UNIQUE(user_id, show_id, season_number)
     );`)
 	if err != nil {
 		log.Fatal(err)

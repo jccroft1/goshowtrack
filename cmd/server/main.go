@@ -48,8 +48,14 @@ func main() {
 
 	// add show page
 	http.HandleFunc("GET /show/add", loggingMiddleware(authMiddleware(addShowHandler)))
+	http.HandleFunc("GET /show/remove", loggingMiddleware(authMiddleware(removeShowHandler)))
 
 	http.HandleFunc("GET /show/details", loggingMiddleware(authMiddleware(showDetailsHandler)))
+
+	http.HandleFunc("GET /show/list", loggingMiddleware(authMiddleware(showListHandler)))
+
+	http.HandleFunc("GET /show/watched", loggingMiddleware(authMiddleware(watchedHandler)))
+	http.HandleFunc("GET /show/unwatched", loggingMiddleware(authMiddleware(unwatchedHandler)))
 
 	fs := http.FileServer(http.Dir("../../static"))
 	http.Handle("/", fs)

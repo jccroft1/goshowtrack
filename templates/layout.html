@@ -7,8 +7,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+<!-- <body class="bg-gray-100 min-h-screen flex items-center justify-center"> -->
+
+<body class="bg-gray-100 text-gray-800 min-h-screen items-center justify-center flex flex-col">
     {{ block "content" . }}{{ end }}
+
+    <footer class="bg-white text-black py-4 my-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-sm">
+            <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+        </div>
+    </footer>
 </body>
 
 </html>

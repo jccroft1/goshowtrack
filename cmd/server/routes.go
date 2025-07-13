@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"time"
 
@@ -117,6 +118,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 		"../../templates/layout.html",
 		"../../templates/"+tmpl+".html",
 		"../../templates/partials/searchBar.html",
+		"../../templates/partials/navBar.html",
 	))
 	err := tmpls.Execute(w, data)
 	if err != nil {
@@ -165,6 +167,12 @@ func validateAuth(req *http.Request) (int64, string, bool) {
 }
 
 func searchHandler(w http.ResponseWriter, req *http.Request) {
+	userID, ok := getUserID(req)
+	if !ok {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
 	query := req.FormValue("query")
 	if query == "" {
 		http.Error(w, "Query is required", http.StatusBadRequest)
@@ -183,6 +191,8 @@ func searchHandler(w http.ResponseWriter, req *http.Request) {
 		Year        string
 		Description string
 		Poster      string
+
+		Added bool
 	}
 	type SearchData struct {
 		Query   string
@@ -205,13 +215,112 @@ func searchHandler(w http.ResponseWriter, req *http.Request) {
 			Year:        year,
 			Description: show.Description,
 			Poster:      show.PosterPath,
+
+			Added: userHasAddedShow(userID, show.ID),
 		}
+
 	}
 
 	renderTemplate(w, "searchResults", data)
 }
 
+// TODO: Make response writer and request parameters use consist naming conventions for all handlers
+func showListHandler(w http.ResponseWriter, req *http.Request) {
+	userID, ok := getUserID(req)
+	if !ok {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	// SQL to fetch the User's Shows
+	showResults, err := db.Connection.Query(`SELECT show_id FROM user_shows WHERE user_id = ?`, userID)
+	if err != nil {
+		log.Println("Error fetch user show list: ", err)
+		http.Error(w, "Failed to fetch user shows", http.StatusInternalServerError)
+		return
+	}
+	defer showResults.Close()
+
+	// Render the results to the user
+	type ShowData struct {
+		ID               int
+		Name             string
+		Year             string
+		Description      string
+		Poster           string
+		Status           string
+		SeasonCount      int
+		WatchAction      string
+		WatchActionColor string
+	}
+	type SearchData struct {
+		List []ShowData
+	}
+
+	data := SearchData{
+		List: make([]ShowData, 0),
+	}
+	for showResults.Next() {
+		var showID int
+		err := showResults.Scan(&showID)
+		if err != nil {
+			log.Println("Error scanning row: ", err)
+			continue
+		}
+
+		// tvdb API call to get the TV Show details
+		show, err := tvdbapi.GetShowDetails(showID)
+		if err != nil {
+			log.Println("Error getting show details: ", err)
+			continue
+		}
+
+		year := ""
+		if len(show.AirDate) > 4 {
+			year = show.AirDate[0:4]
+		}
+
+		seasonCount := 0
+		for _, season := range show.Seasons {
+			if season.Number == 0 {
+				continue
+			}
+			seasonCount++
+		}
+
+		watchedSeason := 0
+		_ = db.Connection.QueryRow(`SELECT season_number FROM user_seasons WHERE user_id = ? AND show_id = ?`, userID, showID).Scan(&watchedSeason)
+		watchAction, watchActionColor := generateActionText(seasonCount, watchedSeason)
+
+		data.List = append(data.List, ShowData{
+			ID:               show.ID,
+			Name:             show.Name,
+			Year:             year,
+			Description:      show.Description,
+			Poster:           show.PosterPath,
+			Status:           show.Status,
+			SeasonCount:      seasonCount,
+			WatchAction:      watchAction,
+			WatchActionColor: watchActionColor,
+		})
+	}
+
+	sort.Slice(data.List, func(i, j int) bool {
+		return data.List[i].Name < data.List[j].Name
+	})
+
+	renderTemplate(w, "showsList", data)
+}
+
 func addShowHandler(w http.ResponseWriter, r *http.Request) {
+	userShowUpdate(w, r, true)
+}
+
+func removeShowHandler(w http.ResponseWriter, r *http.Request) {
+	userShowUpdate(w, r, false)
+}
+
+func userShowUpdate(w http.ResponseWriter, r *http.Request, add bool) {
 	queryStr := r.URL.Query().Get("id")
 	if queryStr == "" {
 		http.Error(w, "No ID provided", http.StatusBadRequest)
@@ -239,36 +348,114 @@ func addShowHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// SQL to add show to user
-	// TODO: Stop it repeatedly adding shows
-	sqlQuery := `INSERT INTO user_shows (user_id, show_id) VALUES (?, ?)`
+	if add {
+		// SQL to add show to user
+		alreadyAdded := userHasAddedShow(userID, query)
 
-	_, err = db.Connection.Exec(sqlQuery, userID, showDetails.ID)
-	if err != nil {
-		log.Println("Error adding show to user:", err)
-		http.Error(w, "Failed to add show to user", http.StatusInternalServerError)
-		return
+		if !alreadyAdded {
+			sqlQuery := `INSERT INTO user_shows (user_id, show_id) VALUES (?, ?)`
+
+			_, err = db.Connection.Exec(sqlQuery, userID, showDetails.ID)
+			if err != nil {
+				log.Println("Error adding show to user:", err)
+				http.Error(w, "Failed to add show to user", http.StatusInternalServerError)
+				return
+			}
+		}
+	} else {
+		// SQL to remove show from user
+		sqlQuery := `DELETE FROM user_shows WHERE user_id = ? AND show_id = ?`
+		_, err = db.Connection.Exec(sqlQuery, userID, showDetails.ID)
+		if err != nil {
+			log.Println("Error adding show to user:", err)
+			http.Error(w, "Failed to add show to user", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// redirect to show details page
 	http.Redirect(w, r, fmt.Sprintf("/show/details?id=%v", showDetails.ID), http.StatusSeeOther)
 }
 
-func showDetailsHandler(w http.ResponseWriter, r *http.Request) {
-	queryStr := r.URL.Query().Get("id")
-	if queryStr == "" {
+func watchedHandler(w http.ResponseWriter, r *http.Request) {
+	userWatchedUpdate(w, r, true)
+}
+
+func unwatchedHandler(w http.ResponseWriter, r *http.Request) {
+	userWatchedUpdate(w, r, false)
+}
+
+func userWatchedUpdate(w http.ResponseWriter, r *http.Request, watched bool) {
+	showIDStr := r.URL.Query().Get("show_id")
+	if showIDStr == "" {
 		http.Error(w, "No ID provided", http.StatusBadRequest)
 		return
 	}
 
-	query, err := strconv.Atoi(queryStr)
+	showID, err := strconv.Atoi(showIDStr)
 	if err != nil {
 		log.Println("Invalid ID provided", err)
 		http.Error(w, "Invalid ID provided", http.StatusBadRequest)
 		return
 	}
 
-	showDetails, err := tvdbapi.GetShowDetails(query)
+	seasonNumberStr := r.URL.Query().Get("season")
+	if seasonNumberStr == "" {
+		http.Error(w, "No ID provided", http.StatusBadRequest)
+		return
+	}
+
+	seasonNumber, err := strconv.Atoi(seasonNumberStr)
+	if err != nil {
+		log.Println("Invalid ID provided", err)
+		http.Error(w, "Invalid ID provided", http.StatusBadRequest)
+		return
+	}
+
+	userID, ok := getUserID(r)
+	if !ok {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	_, err = db.Connection.Exec("DELETE FROM user_seasons WHERE user_id = ? AND show_id = ?", userID, showID)
+	if err != nil {
+		log.Println("Error removing season from user", err)
+		http.Error(w, "Error removing season from user", http.StatusInternalServerError)
+		return
+	}
+	if !watched {
+		seasonNumber--
+	}
+
+	if seasonNumber >= 1 {
+		_, err = db.Connection.Exec("INSERT OR IGNORE INTO user_seasons (user_id, show_id, season_number) VALUES (?, ?, ?)", userID, showID, seasonNumber)
+		if err != nil {
+			log.Println("Error adding season to user", err)
+			http.Error(w, "Error adding season to user", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// redirect to show details page
+	http.Redirect(w, r, fmt.Sprintf("/show/details?id=%v", showID), http.StatusSeeOther)
+}
+
+func showDetailsHandler(w http.ResponseWriter, r *http.Request) {
+	showIDStr := r.URL.Query().Get("id")
+	if showIDStr == "" {
+		http.Error(w, "No ID provided", http.StatusBadRequest)
+		return
+	}
+
+	showID, err := strconv.Atoi(showIDStr)
+	if err != nil {
+		log.Println("Invalid ID provided", err)
+		http.Error(w, "Invalid ID provided", http.StatusBadRequest)
+		return
+	}
+
+	showDetails, err := tvdbapi.GetShowDetails(showID)
 	if err != nil {
 		log.Println("Error searching TVDB: ", err)
 		http.Error(w, "Error searching TVDB", http.StatusInternalServerError)
@@ -281,26 +468,28 @@ func showDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	added := false
-	// check if the user has added the show
-	var id int
-	err = db.Connection.QueryRow("SELECT user_id FROM user_shows WHERE show_id = ? AND user_id = ?", query, userID).Scan(&id)
-	if err != sql.ErrNoRows {
-		added = true
-	}
+	added := userHasAddedShow(userID, showID)
+
+	watchedSeason := 0
+	_ = db.Connection.QueryRow(`SELECT season_number FROM user_seasons WHERE user_id = ? AND show_id = ?`, userID, showID).Scan(&watchedSeason)
 
 	type Season struct {
 		Number    int
 		Episodes  int
 		StartDate string // e.g., "2023-01-15"
+
+		Watched bool
 	}
 	type ShowData struct {
-		Name        string
-		Year        string
-		Description string
-		Poster      string
-		Status      string // "Continuing" or "Ended"
-		Seasons     []Season
+		ID               int
+		Name             string
+		Year             string
+		Description      string
+		Poster           string
+		Status           string // "Continuing" or "Ended"
+		Seasons          []Season
+		WatchAction      string
+		WatchActionColor string
 	}
 	type Data struct {
 		Added    bool
@@ -313,23 +502,30 @@ func showDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// Fetch season data from TVDB API
 	showData := ShowData{
+		ID:          showDetails.ID,
 		Name:        showDetails.Name,
 		Year:        year,
 		Description: showDetails.Description,
 		Poster:      showDetails.PosterPath,
 		Status:      showDetails.Status,
 		Seasons:     []Season{}, // Initialize with empty slice
+
 	}
+	seasonCount := 0
 	for _, season := range showDetails.Seasons {
 		if season.Number == 0 {
 			continue
 		}
+		seasonCount++
+		watched := season.Number <= watchedSeason
 		showData.Seasons = append(showData.Seasons, Season{
 			Number:    season.Number,
 			Episodes:  season.EpisodeCount,
 			StartDate: season.AirDate,
+			Watched:   watched,
 		})
 	}
+	showData.WatchAction, showData.WatchActionColor = generateActionText(seasonCount, watchedSeason)
 
 	data := Data{
 		Added:    added,
@@ -337,4 +533,35 @@ func showDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	renderTemplate(w, "showDetails", data)
+}
+
+func userHasAddedShow(userID int64, showID int) bool {
+	var id int
+	err := db.Connection.QueryRow("SELECT user_id FROM user_shows WHERE show_id = ? AND user_id = ?", showID, userID).Scan(&id)
+
+	return err != sql.ErrNoRows
+}
+
+func generateActionText(totalSeasons, watchedSeasons int) (string, string) {
+	if watchedSeasons == 0 && totalSeasons > 0 {
+		return fmt.Sprintf("Great news! You've got all %v seasons ready to watch.", totalSeasons), "green"
+	}
+
+	if totalSeasons == 0 {
+		return "This show doesn't have any episodes yet. Stay tuned!", "red"
+	}
+
+	if watchedSeasons == totalSeasons {
+		return "You've already watched all the seasons of this show.", "red"
+	}
+
+	if watchedSeasons < totalSeasons {
+		if totalSeasons-watchedSeasons == 1 {
+			return "You have one more season left to watch!", "green"
+		}
+
+		return fmt.Sprintf("You've got %v more seasons ready to watch!", totalSeasons-watchedSeasons), "green"
+	}
+
+	return "Unknown", "grey"
 }
