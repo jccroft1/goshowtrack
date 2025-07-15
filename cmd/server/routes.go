@@ -58,7 +58,7 @@ func authenticateHandler(w http.ResponseWriter, req *http.Request) {
 	// read token from query string
 	token := req.URL.Query().Get("token")
 	if token == "" {
-		http.Error(w, "Token is required", http.StatusBadRequest)
+		http.Redirect(w, req, "/", http.StatusSeeOther)
 		return
 	}
 
@@ -146,7 +146,7 @@ func homeHandler(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	type HelloData struct {
+	type HomeData struct {
 		Email string
 		Query string
 		List  []ShowData
@@ -170,7 +170,7 @@ func homeHandler(w http.ResponseWriter, req *http.Request) {
 	})
 
 	// Render home page
-	renderTemplate(w, "home", HelloData{Email: email, List: list})
+	renderTemplate(w, "home", HomeData{Email: email, List: list})
 }
 
 func loginHandler(w http.ResponseWriter, req *http.Request) {
@@ -199,14 +199,18 @@ func loginHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
-	tmpls := template.Must(template.ParseFiles(
+	tmplBase := template.New("layout").Funcs(template.FuncMap{
+		"dateToYear": dateToYear,
+	})
+
+	tmpls := template.Must(tmplBase.ParseFiles(
 		"../../templates/layout.html",
 		"../../templates/"+tmpl+".html",
 		"../../templates/partials/searchBar.html",
 		"../../templates/partials/navBar.html",
 		"../../templates/partials/showList.html",
 	))
-	err := tmpls.Execute(w, data)
+	err := tmpls.ExecuteTemplate(w, "layout", data)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
@@ -274,7 +278,7 @@ func searchHandler(w http.ResponseWriter, req *http.Request) {
 	type ShowData struct {
 		ID          int
 		Name        string
-		Year        string
+		AirDate     string
 		Description string
 		Poster      string
 
@@ -290,15 +294,11 @@ func searchHandler(w http.ResponseWriter, req *http.Request) {
 		Query:   query,
 	}
 	for i, show := range searchResults {
-		year := ""
-		if len(show.AirDate) > 4 {
-			year = show.AirDate[0:4]
-		}
 
 		data.Results[i] = ShowData{
 			ID:          show.ID,
 			Name:        show.Name,
-			Year:        year,
+			AirDate:     show.AirDate,
 			Description: show.Description,
 			Poster:      show.PosterPath,
 
@@ -527,7 +527,7 @@ func showDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	type ShowData struct {
 		ID               int
 		Name             string
-		Year             string
+		AirDate          string
 		Description      string
 		Poster           string
 		Status           string // "Continuing" or "Ended"
@@ -540,15 +540,11 @@ func showDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		ShowData ShowData
 	}
 
-	year := ""
-	if len(showDetails.AirDate) > 4 {
-		year = showDetails.AirDate[0:4]
-	}
 	// Fetch season data from TVDB API
 	showData := ShowData{
 		ID:          showDetails.ID,
 		Name:        showDetails.Name,
-		Year:        year,
+		AirDate:     showDetails.AirDate,
 		Description: showDetails.Description,
 		Poster:      showDetails.PosterPath,
 		Status:      showDetails.Status,
@@ -557,9 +553,7 @@ func showDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, season := range showDetails.Seasons {
-		if season.Number == 0 {
-			continue
-		}
+
 		watched := season.Number <= watchedSeason
 		showData.Seasons = append(showData.Seasons, Season{
 			Number:    season.Number,
@@ -614,21 +608,33 @@ func generateActionText(totalSeasons, watchedSeasons int) (string, string) {
 
 // Render the results to the user
 type ShowData struct {
-	ID               int
-	Name             string
-	Year             string
-	Description      string
-	Poster           string
-	Status           string
-	SeasonCount      int
+	// TVDB Data
+	ID          int
+	Name        string
+	AirDate     string
+	Description string
+	Poster      string
+	Status      string
+	SeasonCount int
+	Seasons     []SeasonData
+
+	// UI features
+	Order            string
 	WatchAction      string
 	WatchActionColor string
-	Seasons          []SeasonData
 }
 
 type SeasonData struct {
 	Number  int
 	AirDate string
+}
+
+func dateToYear(s string) string {
+	out := ""
+	if len(s) > 4 {
+		out = s[0:4]
+	}
+	return out
 }
 
 func getShowListData(userID int64, showIDs []int) []ShowData {
@@ -640,11 +646,6 @@ func getShowListData(userID int64, showIDs []int) []ShowData {
 		if err != nil {
 			log.Println("Error getting show details: ", err)
 			continue
-		}
-
-		year := ""
-		if len(show.AirDate) > 4 {
-			year = show.AirDate[0:4]
 		}
 
 		seasons := []SeasonData{}
@@ -662,7 +663,7 @@ func getShowListData(userID int64, showIDs []int) []ShowData {
 		showData = append(showData, ShowData{
 			ID:               show.ID,
 			Name:             show.Name,
-			Year:             year,
+			AirDate:          show.AirDate,
 			Description:      show.Description,
 			Poster:           show.PosterPath,
 			Status:           show.Status,

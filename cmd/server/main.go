@@ -35,29 +35,25 @@ func main() {
 
 	db.Setup()
 
-	// root - login page, if authed, redirect to other page
+	http.HandleFunc("GET /favicon.png", faviconHandler)
+
+	// login
 	http.HandleFunc("GET /", loggingMiddleware(rootHandler))
 	http.HandleFunc("POST /login", loggingMiddleware(loginHandler))
 	http.HandleFunc("GET /login", loggingMiddleware(authenticateHandler))
 
-	// home
+	// main pages
 	http.HandleFunc("GET /home", loggingMiddleware(authMiddleware(homeHandler)))
-
-	// search results
 	http.HandleFunc("POST /search", loggingMiddleware(authMiddleware(searchHandler)))
-
-	// add show page
-	http.HandleFunc("GET /show/add", loggingMiddleware(authMiddleware(addShowHandler)))
-	http.HandleFunc("GET /show/remove", loggingMiddleware(authMiddleware(removeShowHandler)))
-
+	http.HandleFunc("GET /show/list", loggingMiddleware(authMiddleware(showListHandler)))
 	http.HandleFunc("GET /show/details", loggingMiddleware(authMiddleware(showDetailsHandler)))
 
-	http.HandleFunc("GET /show/list", loggingMiddleware(authMiddleware(showListHandler)))
-
+	// show actions
+	// TODO: Make these POST requests
+	http.HandleFunc("GET /show/add", loggingMiddleware(authMiddleware(addShowHandler)))
+	http.HandleFunc("GET /show/remove", loggingMiddleware(authMiddleware(removeShowHandler)))
 	http.HandleFunc("GET /show/watched", loggingMiddleware(authMiddleware(watchedHandler)))
 	http.HandleFunc("GET /show/unwatched", loggingMiddleware(authMiddleware(unwatchedHandler)))
-
-	http.HandleFunc("GET /favicon.png", faviconHandler)
 
 	fmt.Println("Server running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

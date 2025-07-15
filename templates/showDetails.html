@@ -14,7 +14,7 @@
         <div class="flex-1 space-y-2">
             <div class="flex items-center justify-between">
                 <h2 class="text-3xl font-bold text-gray-900">
-                    {{ .ShowData.Name }} ({{ .ShowData.Year }})
+                    {{ .ShowData.Name }} ({{ dateToYear .ShowData.AirDate }})
                 </h2>
 
                 {{ if .Added }}

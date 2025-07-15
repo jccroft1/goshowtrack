@@ -1,8 +1,8 @@
 {{ define "show-list" }}
 
-{{ if .List }}
+{{ if . }}
 <ul class="space-y-6">
-    {{ range .List }}
+    {{ range . }}
     <li class="flex gap-4 items-start">
         <a href="/show/details?id={{ .ID }}">
             <img src="{{ .Poster }}" alt="{{ .Name }} poster" class="w-24 h-36 object-cover rounded">
@@ -11,7 +11,7 @@
         <div class="flex-1 text-left space-y-2">
             <h3 class="text-xl font-semibold text-gray-900">
                 <a href="/show/details?id={{ .ID }}">
-                    {{ .Name }} <span class="text-sm text-gray-500">({{ .Year }})</span>
+                    {{ .Name }} <span class="text-sm text-gray-500">({{ dateToYear .AirDate }})</span>
                 </a>
             </h3>
 
