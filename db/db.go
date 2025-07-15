@@ -58,7 +58,8 @@ func Setup() {
 		name TEXT, 
 		season_number INTEGER,
         episode_count INTEGER, 
-		air_date TEXT
+		air_date TEXT, 
+		last_air_date TEXT
     );`)
 	if err != nil {
 		log.Fatal(err)

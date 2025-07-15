@@ -1,6 +1,7 @@
 package tvdbapi
 
 import (
+	"cmp"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"time"
 )
@@ -73,20 +75,29 @@ type Season struct {
 	Name         string `json:"name"`
 	EpisodeCount int    `json:"episode_count"`
 	AirDate      string `json:"air_date"`
+	LastAirDate  string
 }
 
-// https://api.themoviedb.org/3/tv/253?language=en-US'
+type SeasonDetails struct {
+	Episodes []Episode `json:"episodes"`
+}
+
+type Episode struct {
+	AirDate string `json:"air_date"`
+}
+
+// https://developer.themoviedb.org/reference/tv-series-details
+// https://developer.themoviedb.org/reference/tv-season-details
 func GetShowDetails(id int) (*ShowDetail, error) {
 	// attempt to load from DB
 	var show ShowDetail
-	fmt.Println("ID", id)
 	err := db.Connection.QueryRow("SELECT show_id, name, status, air_date, description, poster_path FROM shows WHERE show_id = ?", id).
 		Scan(&show.ID, &show.Name, &show.Status, &show.AirDate, &show.Description, &show.PosterPath)
 	if err != sql.ErrNoRows {
-		log.Println("loaded show from cache")
+		log.Println("TVDB API:", "loaded show from cache")
 
 		// load seasons
-		rows, err := db.Connection.Query("SELECT name, episode_count, season_number, air_date FROM seasons WHERE show_id = ?", id)
+		rows, err := db.Connection.Query("SELECT name, episode_count, season_number, air_date, last_air_date FROM seasons WHERE show_id = ?", id)
 		if err != nil {
 			return nil, fmt.Errorf("failed to query seasons: %v", err)
 		}
@@ -95,7 +106,7 @@ func GetShowDetails(id int) (*ShowDetail, error) {
 		seasons := []Season{}
 		for rows.Next() {
 			var season Season
-			err := rows.Scan(&season.Name, &season.EpisodeCount, &season.Number, &season.AirDate)
+			err := rows.Scan(&season.Name, &season.EpisodeCount, &season.Number, &season.AirDate, &season.LastAirDate)
 			if err != nil {
 				return nil, fmt.Errorf("failed to scan season: %v", err)
 			}
@@ -107,13 +118,43 @@ func GetShowDetails(id int) (*ShowDetail, error) {
 		return &show, err
 	}
 
+	// actual request
 	var response ShowDetail
-
 	err = getRequest("tv/"+strconv.Itoa(id), &response)
 	if err != nil {
 		return nil, err
 	}
 	response.PosterPath = fmt.Sprintf("%s%s", baseImageURL, response.PosterPath)
+
+	// remove Season 0 (specials)
+	for i, s := range response.Seasons {
+		if s.Number != 0 {
+			continue
+		}
+
+		response.Seasons = append(response.Seasons[:i], response.Seasons[i+1:]...)
+		break // assume there's only 1 season 0
+	}
+
+	// bit of a hack, we fetch each Season details, then find the newest episode and augment the response
+	for i, s := range response.Seasons {
+		var season SeasonDetails
+		err = getRequest(fmt.Sprintf("tv/%v/season/%v", strconv.Itoa(id), s.Number), &season)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch season %v details for show %d: %v", s.Number, id, err)
+		}
+
+		if len(season.Episodes) == 0 {
+			// response.Seasons[i].LastAirDate = "9999-01-01"
+			continue
+		}
+
+		newestEpisode := slices.MaxFunc(season.Episodes, func(a, b Episode) int {
+			return cmp.Compare(a.AirDate, b.AirDate)
+		})
+
+		response.Seasons[i].LastAirDate = newestEpisode.AirDate
+	}
 
 	// save to DB
 	_, err = db.Connection.Exec(`INSERT INTO shows (show_id, name, status, air_date, description, poster_path) VALUES (?, ?, ?, ?, ?, ?);`,
@@ -123,8 +164,8 @@ func GetShowDetails(id int) (*ShowDetail, error) {
 	}
 
 	for _, s := range response.Seasons {
-		_, err = db.Connection.Exec(`INSERT INTO seasons (show_id, name, season_number, episode_count, air_date) VALUES (?, ?, ?, ?, ?);`,
-			response.ID, s.Name, s.Number, s.EpisodeCount, s.AirDate)
+		_, err = db.Connection.Exec(`INSERT INTO seasons (show_id, name, season_number, episode_count, air_date, last_air_date) VALUES (?, ?, ?, ?, ?, ?);`,
+			response.ID, s.Name, s.Number, s.EpisodeCount, s.AirDate, s.LastAirDate)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -141,7 +182,7 @@ func getRequest(relativeURL string, output interface{}) error {
 	}
 
 	req.Header.Set("Authorization", "Bearer "+token)
-	fmt.Println(req.URL)
+	log.Println("TVDB API:", req.URL)
 	res, err := client.Do(req)
 	if err != nil {
 		return err

@@ -8,12 +8,41 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 )
+
+func faviconHandler(w http.ResponseWriter, r *http.Request) {
+	// Define the path to your favicon file
+	path := "../../assets/icon.png"
+
+	// Open the file
+	file, err := os.Open(path)
+	if err != nil {
+		http.Error(w, "Favicon not found", http.StatusNotFound)
+		return
+	}
+	defer file.Close()
+
+	// Set the content type to PNG
+	w.Header().Set("Content-Type", "image/png")
+
+	// Serve the file
+	http.ServeContent(w, r, "favicon.png", fileStat(file), file)
+}
+
+func fileStat(file *os.File) (modTime time.Time) {
+	info, err := file.Stat()
+	if err != nil {
+		return
+	}
+	return info.ModTime()
+}
 
 func rootHandler(w http.ResponseWriter, req *http.Request) {
 	_, _, ok := validateAuth(req)
@@ -79,13 +108,69 @@ func homeHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	userID, ok := getUserID(req)
+	if !ok {
+		http.Error(w, "User not authenticated", http.StatusUnauthorized)
+		return
+	}
+
+	// SQL to fetch the User's Shows
+	showResults, err := db.Connection.Query(`SELECT show_id FROM user_shows WHERE user_id = ?`, userID)
+	if err != nil {
+		log.Println("Error fetch user show list: ", err)
+		http.Error(w, "Failed to fetch user shows", http.StatusInternalServerError)
+		return
+	}
+	defer showResults.Close()
+
+	var showIDs []int
+	for showResults.Next() {
+		var showID int
+		err := showResults.Scan(&showID)
+		if err != nil {
+			log.Println("Error scanning row: ", err)
+			continue
+		}
+
+		show, err := tvdbapi.GetShowDetails(showID)
+		if err != nil {
+			log.Println("Error getting show details: ", err)
+			continue
+		}
+
+		watchedSeasons := 0
+		_ = db.Connection.QueryRow(`SELECT season_number FROM user_seasons WHERE user_id = ? AND show_id = ?`, userID, showID).Scan(&watchedSeasons)
+
+		if watchedSeasons < getTotalReleasedSeasons(show.Seasons) {
+			showIDs = append(showIDs, showID)
+		}
+	}
+
 	type HelloData struct {
 		Email string
 		Query string
+		List  []ShowData
 	}
 
+	list := getShowListData(userID, showIDs)
+
+	sort.Slice(list, func(i, j int) bool {
+		getNextUnwatchedSeasonDate := func(idx int) string {
+			show := list[idx]
+
+			// Reduce duplication with call above
+			watchedSeasons := 0
+			_ = db.Connection.QueryRow(`SELECT season_number FROM user_seasons WHERE user_id = ? AND show_id = ?`, userID, show.ID).Scan(&watchedSeasons)
+
+			return show.Seasons[watchedSeasons].AirDate
+
+		}
+
+		return getNextUnwatchedSeasonDate(i) < getNextUnwatchedSeasonDate(j)
+	})
+
 	// Render home page
-	renderTemplate(w, "home", HelloData{Email: email})
+	renderTemplate(w, "home", HelloData{Email: email, List: list})
 }
 
 func loginHandler(w http.ResponseWriter, req *http.Request) {
@@ -119,6 +204,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 		"../../templates/"+tmpl+".html",
 		"../../templates/partials/searchBar.html",
 		"../../templates/partials/navBar.html",
+		"../../templates/partials/showList.html",
 	))
 	err := tmpls.Execute(w, data)
 	if err != nil {
@@ -241,25 +327,7 @@ func showListHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	defer showResults.Close()
 
-	// Render the results to the user
-	type ShowData struct {
-		ID               int
-		Name             string
-		Year             string
-		Description      string
-		Poster           string
-		Status           string
-		SeasonCount      int
-		WatchAction      string
-		WatchActionColor string
-	}
-	type SearchData struct {
-		List []ShowData
-	}
-
-	data := SearchData{
-		List: make([]ShowData, 0),
-	}
+	var showIDs []int
 	for showResults.Next() {
 		var showID int
 		err := showResults.Scan(&showID)
@@ -268,41 +336,15 @@ func showListHandler(w http.ResponseWriter, req *http.Request) {
 			continue
 		}
 
-		// tvdb API call to get the TV Show details
-		show, err := tvdbapi.GetShowDetails(showID)
-		if err != nil {
-			log.Println("Error getting show details: ", err)
-			continue
-		}
+		showIDs = append(showIDs, showID)
+	}
 
-		year := ""
-		if len(show.AirDate) > 4 {
-			year = show.AirDate[0:4]
-		}
+	type SearchData struct {
+		List []ShowData
+	}
 
-		seasonCount := 0
-		for _, season := range show.Seasons {
-			if season.Number == 0 {
-				continue
-			}
-			seasonCount++
-		}
-
-		watchedSeason := 0
-		_ = db.Connection.QueryRow(`SELECT season_number FROM user_seasons WHERE user_id = ? AND show_id = ?`, userID, showID).Scan(&watchedSeason)
-		watchAction, watchActionColor := generateActionText(seasonCount, watchedSeason)
-
-		data.List = append(data.List, ShowData{
-			ID:               show.ID,
-			Name:             show.Name,
-			Year:             year,
-			Description:      show.Description,
-			Poster:           show.PosterPath,
-			Status:           show.Status,
-			SeasonCount:      seasonCount,
-			WatchAction:      watchAction,
-			WatchActionColor: watchActionColor,
-		})
+	data := SearchData{
+		List: getShowListData(userID, showIDs),
 	}
 
 	sort.Slice(data.List, func(i, j int) bool {
@@ -477,8 +519,10 @@ func showDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		Number    int
 		Episodes  int
 		StartDate string // e.g., "2023-01-15"
+		EndDate   string
 
-		Watched bool
+		Watched  bool
+		Released bool
 	}
 	type ShowData struct {
 		ID               int
@@ -511,21 +555,23 @@ func showDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		Seasons:     []Season{}, // Initialize with empty slice
 
 	}
-	seasonCount := 0
+
 	for _, season := range showDetails.Seasons {
 		if season.Number == 0 {
 			continue
 		}
-		seasonCount++
 		watched := season.Number <= watchedSeason
 		showData.Seasons = append(showData.Seasons, Season{
 			Number:    season.Number,
 			Episodes:  season.EpisodeCount,
 			StartDate: season.AirDate,
+			EndDate:   season.LastAirDate,
 			Watched:   watched,
+			Released:  isReleased(season.LastAirDate),
 		})
 	}
-	showData.WatchAction, showData.WatchActionColor = generateActionText(seasonCount, watchedSeason)
+
+	showData.WatchAction, showData.WatchActionColor = generateActionText(getTotalReleasedSeasons(showDetails.Seasons), watchedSeason)
 
 	data := Data{
 		Added:    added,
@@ -543,16 +589,16 @@ func userHasAddedShow(userID int64, showID int) bool {
 }
 
 func generateActionText(totalSeasons, watchedSeasons int) (string, string) {
-	if watchedSeasons == 0 && totalSeasons > 0 {
-		return fmt.Sprintf("Great news! You've got all %v seasons ready to watch.", totalSeasons), "green"
-	}
+	// if watchedSeasons == 0 && totalSeasons > 0 {
+	// 	return fmt.Sprintf("Great news! You've got all %v seasons ready to watch.", totalSeasons), "green"
+	// }
 
 	if totalSeasons == 0 {
 		return "This show doesn't have any episodes yet. Stay tuned!", "red"
 	}
 
 	if watchedSeasons == totalSeasons {
-		return "You've already watched all the seasons of this show.", "red"
+		return "You've watched all the available seasons of this show.", "red"
 	}
 
 	if watchedSeasons < totalSeasons {
@@ -564,4 +610,96 @@ func generateActionText(totalSeasons, watchedSeasons int) (string, string) {
 	}
 
 	return "Unknown", "grey"
+}
+
+// Render the results to the user
+type ShowData struct {
+	ID               int
+	Name             string
+	Year             string
+	Description      string
+	Poster           string
+	Status           string
+	SeasonCount      int
+	WatchAction      string
+	WatchActionColor string
+	Seasons          []SeasonData
+}
+
+type SeasonData struct {
+	Number  int
+	AirDate string
+}
+
+func getShowListData(userID int64, showIDs []int) []ShowData {
+	var showData []ShowData
+
+	for _, showID := range showIDs {
+		// tvdb API call to get the TV Show details
+		show, err := tvdbapi.GetShowDetails(showID)
+		if err != nil {
+			log.Println("Error getting show details: ", err)
+			continue
+		}
+
+		year := ""
+		if len(show.AirDate) > 4 {
+			year = show.AirDate[0:4]
+		}
+
+		seasons := []SeasonData{}
+		for _, season := range show.Seasons {
+			seasons = append(seasons, SeasonData{
+				Number:  season.Number,
+				AirDate: season.AirDate,
+			})
+		}
+
+		watchedSeason := 0
+		_ = db.Connection.QueryRow(`SELECT season_number FROM user_seasons WHERE user_id = ? AND show_id = ?`, userID, showID).Scan(&watchedSeason)
+		watchAction, watchActionColor := generateActionText(getTotalReleasedSeasons(show.Seasons), watchedSeason)
+
+		showData = append(showData, ShowData{
+			ID:               show.ID,
+			Name:             show.Name,
+			Year:             year,
+			Description:      show.Description,
+			Poster:           show.PosterPath,
+			Status:           show.Status,
+			SeasonCount:      len(show.Seasons),
+			WatchAction:      watchAction,
+			WatchActionColor: watchActionColor,
+			Seasons:          seasons,
+		})
+	}
+
+	return showData
+}
+
+func getTotalReleasedSeasons(seasons []tvdbapi.Season) int {
+	releasedSeasons := 0
+	for _, season := range seasons {
+		if !isReleased(season.LastAirDate) {
+			continue
+		}
+
+		releasedSeasons++
+	}
+	return releasedSeasons
+}
+
+func isReleased(seasonAirDate string) bool {
+	if strings.TrimSpace(seasonAirDate) == "" {
+		return false
+	}
+
+	parsedAirDate, err := time.Parse("2006-01-02", seasonAirDate)
+	if err != nil {
+		log.Println("Error parsing finish date:", err)
+		return false
+	}
+
+	now := time.Now()
+
+	return now.After(parsedAirDate)
 }

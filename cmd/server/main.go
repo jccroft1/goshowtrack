@@ -57,8 +57,7 @@ func main() {
 	http.HandleFunc("GET /show/watched", loggingMiddleware(authMiddleware(watchedHandler)))
 	http.HandleFunc("GET /show/unwatched", loggingMiddleware(authMiddleware(unwatchedHandler)))
 
-	fs := http.FileServer(http.Dir("../../static"))
-	http.Handle("/", fs)
+	http.HandleFunc("GET /favicon.png", faviconHandler)
 
 	fmt.Println("Server running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

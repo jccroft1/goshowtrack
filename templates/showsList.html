@@ -6,50 +6,6 @@
         {{ template "nav-bar" . }}
     </div>
 
-    {{ if .List }}
-    <ul class="space-y-6">
-        {{ range .List }}
-        <li class="flex gap-4 items-start">
-            <a href="/show/details?id={{ .ID }}">
-                <img src="{{ .Poster }}" alt="{{ .Name }} poster" class="w-24 h-36 object-cover rounded">
-            </a>
-
-            <div class="flex-1 text-left space-y-2">
-                <h3 class="text-xl font-semibold text-gray-900">
-                    <a href="/show/details?id={{ .ID }}">
-                        {{ .Name }} <span class="text-sm text-gray-500">({{ .Year }})</span>
-                    </a>
-                </h3>
-
-                <p class="text-gray-700 mt-1 mb-4">Total Seasons: {{ .SeasonCount }}</p>
-
-                <!-- Show Status -->
-                <!-- TODO: Move to a partial, can be re-used in showDetails -->
-                {{ if eq .Status "Continuing" }}
-                <span class="inline-block text-sm font-semibold text-green-700 bg-green-100 px-3 py-1 rounded">
-                    Continuing
-                </span>
-                {{ else if eq .Status "Ended" }}
-                <span class="inline-block text-sm font-semibold text-red-700 bg-red-100 px-3 py-1 rounded">
-                    Ended
-                </span>
-                {{ else }}
-                <span class="inline-block text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-1 rounded">
-                    {{ .Status }}
-                </span>
-                {{ end }}
-
-                <!-- Seasons to Watch -->
-                <div
-                    class="w-full px-3 py-2 rounded-xl text-sm font-medium text-{{.WatchActionColor}}-800 bg-{{.WatchActionColor}}-100 border border-{{.WatchActionColor}}-300">
-                    {{ .WatchAction }}
-                </div>
-            </div>
-        </li>
-        {{ end }}
-    </ul>
-    {{ else }}
-    <p class="text-gray-600">No shows found. Use search to add some shows.</p>
-    {{ end }}
+    {{ template "show-list" . }}
 </div>
 {{ end }}
