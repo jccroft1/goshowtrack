@@ -19,11 +19,7 @@
 
             <!-- Show Status -->
             <!-- TODO: Move to a partial, can be re-used in showDetails -->
-            {{ if eq .Status "Continuing" }}
-            <span class="inline-block text-sm font-semibold text-green-700 bg-green-100 px-3 py-1 rounded">
-                Continuing
-            </span>
-            {{ else if eq .Status "Ended" }}
+            {{ if eq .Status "Ended" }}
             <span class="inline-block text-sm font-semibold text-red-700 bg-red-100 px-3 py-1 rounded">
                 Ended
             </span>
@@ -34,10 +30,12 @@
             {{ end }}
 
             <!-- Seasons to Watch -->
+            {{if ne .WatchAction "" }}
             <div
                 class="w-full px-3 py-2 rounded-xl text-sm font-medium text-{{.WatchActionColor}}-800 bg-{{.WatchActionColor}}-100 border border-{{.WatchActionColor}}-300">
                 {{ .WatchAction }}
             </div>
+            {{ end}}
         </div>
     </li>
     {{ end }}

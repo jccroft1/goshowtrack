@@ -2,15 +2,14 @@ package main
 
 import (
 	"fmt"
+	"gotrack/auth"
 	"gotrack/db"
+	"gotrack/mail"
+	"gotrack/routes"
 	"gotrack/tvdbapi"
 	"log"
 	"net/http"
 	"os"
-)
-
-var (
-	jwtSecret = []byte("super-secret-token")
 )
 
 func main() {
@@ -28,47 +27,33 @@ func main() {
 	SMTP_FROM := os.Getenv("SMTP_FROM")
 	fmt.Println("SMTP_URL:", SMTP_URL, "SMTP_PORT:", SMTP_PORT, "SMTP_USERNAME:", SMTP_USERNAME, "SMTP_PASSWORD:", SMTP_PASSWORD, "SMTP_FROM:", SMTP_FROM)
 
-	err := SetupMail(SMTP_URL, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM)
+	err := mail.Setup(SMTP_URL, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM)
 	if err != nil {
 		log.Fatalf("Failed to setup mail: %v", err)
 	}
 
 	db.Setup()
 
-	http.HandleFunc("GET /favicon.png", faviconHandler)
+	http.HandleFunc("GET /favicon.png", routes.FaviconHandler)
 
 	// login
-	http.HandleFunc("GET /", loggingMiddleware(rootHandler))
-	http.HandleFunc("POST /login", loggingMiddleware(loginHandler))
-	http.HandleFunc("GET /login", loggingMiddleware(authenticateHandler))
+	http.HandleFunc("GET /", loggingMiddleware(routes.RootHandler))
+	http.HandleFunc("POST /login", loggingMiddleware(routes.LoginHandler))
+	http.HandleFunc("GET /login", loggingMiddleware(routes.AuthenticateHandler))
 
 	// main pages
-	http.HandleFunc("GET /home", loggingMiddleware(authMiddleware(homeHandler)))
-	http.HandleFunc("POST /search", loggingMiddleware(authMiddleware(searchHandler)))
-	http.HandleFunc("GET /show/list", loggingMiddleware(authMiddleware(showListHandler)))
-	http.HandleFunc("GET /show/details", loggingMiddleware(authMiddleware(showDetailsHandler)))
+	http.HandleFunc("GET /home", loggingMiddleware(auth.Middleware(routes.HomeHandler)))
+	http.HandleFunc("POST /search", loggingMiddleware(auth.Middleware(routes.SearchHandler)))
+	http.HandleFunc("GET /show/list", loggingMiddleware(auth.Middleware(routes.ShowListHandler)))
+	http.HandleFunc("GET /show/details", loggingMiddleware(auth.Middleware(routes.ShowDetailsHandler)))
 
 	// show actions
 	// TODO: Make these POST requests
-	http.HandleFunc("GET /show/add", loggingMiddleware(authMiddleware(addShowHandler)))
-	http.HandleFunc("GET /show/remove", loggingMiddleware(authMiddleware(removeShowHandler)))
-	http.HandleFunc("GET /show/watched", loggingMiddleware(authMiddleware(watchedHandler)))
-	http.HandleFunc("GET /show/unwatched", loggingMiddleware(authMiddleware(unwatchedHandler)))
+	http.HandleFunc("GET /show/add", loggingMiddleware(auth.Middleware(routes.AddShowHandler)))
+	http.HandleFunc("GET /show/remove", loggingMiddleware(auth.Middleware(routes.RemoveShowHandler)))
+	http.HandleFunc("GET /show/watched", loggingMiddleware(auth.Middleware(routes.WatchedHandler)))
+	http.HandleFunc("GET /show/unwatched", loggingMiddleware(auth.Middleware(routes.UnwatchedHandler)))
 
 	fmt.Println("Server running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
-}
-
-type userEmail struct{}
-
-func getUserEmail(r *http.Request) (string, bool) {
-	email, ok := r.Context().Value(userEmail{}).(string)
-	return email, ok
-}
-
-type userID struct{}
-
-func getUserID(r *http.Request) (int64, bool) {
-	id, ok := r.Context().Value(userID{}).(int64)
-	return id, ok
 }

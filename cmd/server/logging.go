@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"context"
 	"log"
 	"net/http"
 	"time"
@@ -48,20 +47,5 @@ func loggingMiddleware(next func(w http.ResponseWriter, r *http.Request)) func(w
 			lrw.statusCode,
 			duration,
 		)
-	})
-}
-
-func authMiddleware(next func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		id, email, ok := validateAuth(r)
-		if !ok {
-			http.Redirect(w, r, "/login", http.StatusFound)
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), userEmail{}, email)
-		ctx = context.WithValue(ctx, userID{}, id)
-
-		next(w, r.WithContext(ctx))
 	})
 }

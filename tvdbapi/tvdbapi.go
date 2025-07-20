@@ -94,7 +94,7 @@ func GetShowDetails(id int) (*ShowDetail, error) {
 	err := db.Connection.QueryRow("SELECT show_id, name, status, air_date, description, poster_path FROM shows WHERE show_id = ?", id).
 		Scan(&show.ID, &show.Name, &show.Status, &show.AirDate, &show.Description, &show.PosterPath)
 	if err != sql.ErrNoRows {
-		log.Println("TVDB API:", "loaded show from cache")
+		log.Println("TVDB API:", "loaded show from cache", show.Name)
 
 		// load seasons
 		rows, err := db.Connection.Query("SELECT name, episode_count, season_number, air_date, last_air_date FROM seasons WHERE show_id = ?", id)
