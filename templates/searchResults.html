@@ -13,7 +13,7 @@
         {{ range .Results }}
         <li class="flex gap-4 items-start">
             <a href="/show/details?id={{ .ID }}">
-                <img src="{{ .Poster }}" alt="{{ .Name }} poster" class="w-24 h-36 object-cover rounded">
+                <img src="{{ .Poster }}" alt="{{ .Name }} poster" class="w-24 h-36 object-cover">
             </a>
 
             <div class="flex-1 text-left">
@@ -26,13 +26,13 @@
 
                 {{ if .Added }}
                 <button onclick="window.location.href='/show/remove?id={{ .ID }}'"
-                    class="ml-4 bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm font-semibold">
-                    Remove -
+                    class="bg-red-600 text-white px-3 py-1 rounded-full hover:bg-red-700 text-sm font-semibold">
+                    Remove
                 </button>
                 {{ else }}
                 <button onclick="window.location.href='/show/add?id={{ .ID }}'"
-                    class="ml-4 bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 text-sm font-semibold">
-                    Add +
+                    class="bg-green-600 text-white px-3 py-1 rounded-full hover:bg-green-700 text-sm font-semibold">
+                    Add
                 </button>
                 {{ end }}
             </div>

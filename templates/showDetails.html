@@ -4,13 +4,12 @@
 {{ define "content" }}
 
 
-<div class="max-w-4xl bg-white p-6 rounded shadow space-y-6">
+<div class="max-w-3xl bg-white p-6 rounded shadow space-y-6">
     {{ template "nav-bar" . }}
 
     <!-- Show Info -->
     <div class="flex gap-6">
-        <img src="{{ .ShowData.Poster }}" alt="{{ .ShowData.Name }} poster"
-            class="w-40 h-60 object-cover rounded border">
+        <img src="{{ .ShowData.Poster }}" alt="{{ .ShowData.Name }} poster" class="w-40 h-60 object-cover border">
         <div class="flex-1 space-y-2">
             <div class="flex items-center justify-between">
                 <h2 class="text-3xl font-bold text-gray-900">
@@ -19,13 +18,13 @@
 
                 {{ if .Added }}
                 <button onclick="window.location.href='/show/remove?id={{ .ShowData.ID }}'"
-                    class="ml-4 bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm font-semibold">
-                    Remove -
+                    class="ml-4 bg-red-600 text-white px-3 py-1 rounded-full hover:bg-red-700 text-sm font-semibold">
+                    Remove
                 </button>
                 {{ else }}
                 <button onclick="window.location.href='/show/add?id={{ .ShowData.ID }}'"
-                    class="ml-4 bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm font-semibold">
-                    Add +
+                    class="ml-4 bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700 text-sm font-semibold">
+                    Add
                 </button>
                 {{ end }}
             </div>
@@ -33,23 +32,19 @@
             <p class="text-gray-700">{{ .ShowData.Description }}</p>
 
             <!-- Show Status -->
-            {{ if eq .ShowData.Status "Continuing" }}
-            <span class="inline-block text-sm font-semibold text-green-700 bg-green-100 px-3 py-1 rounded">
-                Continuing
-            </span>
-            {{ else if eq .ShowData.Status "Ended" }}
-            <span class="inline-block text-sm font-semibold text-red-700 bg-red-100 px-3 py-1 rounded">
+            {{ if eq .ShowData.Status "Ended" }}
+            <span class="inline-block text-sm font-semibold text-red-700 bg-red-100 px-3 py-1">
                 Ended
             </span>
             {{ else }}
-            <span class="inline-block text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-1 rounded">
+            <span class="inline-block text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-1">
                 {{ .ShowData.Status }}
             </span>
             {{ end }}
 
             <!-- Seasons to Watch -->
             <div
-                class="w-full px-3 py-2 rounded-xl text-sm font-medium text-{{.ShowData.WatchActionColor}}-800 bg-{{.ShowData.WatchActionColor}}-100 border border-{{.ShowData.WatchActionColor}}-300">
+                class="w-full px-3 py-2 text-sm font-medium text-{{.ShowData.WatchActionColor}}-800 bg-{{.ShowData.WatchActionColor}}-100 border border-{{.ShowData.WatchActionColor}}-300">
                 {{ .ShowData.WatchAction }}
             </div>
         </div>
@@ -108,14 +103,14 @@
 
                             {{ if .Watched }}
                             <button
-                                class="mark-watched-btn inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700"
+                                class="mark-watched-btn inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-yellow-600 hover:bg-yellow-700"
                                 data-season-number="{{ .Number }}" data-show-id="{{ $.ShowData.ID }}"
                                 onclick="window.location.href='/show/unwatched?show_id={{ $.ShowData.ID }}&season={{ .Number }}'">
                                 Mark Unwatched
                             </button>
                             {{ else }}
                             <button
-                                class="mark-watched-btn inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                                class="mark-watched-btn inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
                                 data-season-number="{{ .Number }}" data-show-id="{{ $.ShowData.ID }}"
                                 onclick="window.location.href='/show/watched?show_id={{ $.ShowData.ID }}&season={{ .Number }}'">
                                 Mark Watched

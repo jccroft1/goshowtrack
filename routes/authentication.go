@@ -45,6 +45,17 @@ func LoginHandler(w http.ResponseWriter, req *http.Request) {
 	renderTemplate(w, "loginRedirect", nil)
 }
 
+func LogoutHandler(w http.ResponseWriter, req *http.Request) {
+	http.SetCookie(w, &http.Cookie{
+		Name:    "token",
+		Value:   "",
+		Path:    "/",
+		Expires: time.Now().Add(24 * time.Hour),
+	})
+
+	http.Redirect(w, req, "/home", http.StatusFound)
+}
+
 func AuthenticateHandler(w http.ResponseWriter, req *http.Request) {
 	// read token from query string
 	token := req.URL.Query().Get("token")

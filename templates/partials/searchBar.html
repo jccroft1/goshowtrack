@@ -1,9 +1,9 @@
 {{ define "search-bar" }}
 <form method="POST" action="/search" class="flex items-center gap-2">
     <input type="text" name="query" placeholder="Search for a TV Show..."
-        class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        class="w-full px-4 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         value="{{ .Query }}">
-    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition">
         Search
     </button>
 </form>

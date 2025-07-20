@@ -7,6 +7,10 @@ import (
 )
 
 func SearchHandler(w http.ResponseWriter, req *http.Request) {
+	renderTemplate(w, "search", nil)
+}
+
+func SearchResultsHandler(w http.ResponseWriter, req *http.Request) {
 	userID, ok := auth.GetUserID(req)
 	if !ok {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)

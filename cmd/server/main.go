@@ -40,10 +40,12 @@ func main() {
 	http.HandleFunc("GET /", loggingMiddleware(routes.RootHandler))
 	http.HandleFunc("POST /login", loggingMiddleware(routes.LoginHandler))
 	http.HandleFunc("GET /login", loggingMiddleware(routes.AuthenticateHandler))
+	http.HandleFunc("GET /logout", loggingMiddleware(routes.LogoutHandler))
 
 	// main pages
 	http.HandleFunc("GET /home", loggingMiddleware(auth.Middleware(routes.HomeHandler)))
-	http.HandleFunc("POST /search", loggingMiddleware(auth.Middleware(routes.SearchHandler)))
+	http.HandleFunc("GET /search", loggingMiddleware(auth.Middleware(routes.SearchHandler)))
+	http.HandleFunc("POST /search", loggingMiddleware(auth.Middleware(routes.SearchResultsHandler)))
 	http.HandleFunc("GET /show/list", loggingMiddleware(auth.Middleware(routes.ShowListHandler)))
 	http.HandleFunc("GET /show/details", loggingMiddleware(auth.Middleware(routes.ShowDetailsHandler)))
 
