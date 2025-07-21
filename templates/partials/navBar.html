@@ -1,21 +1,39 @@
 {{ define "nav-bar" }}
 
-<nav class="sticky z-50 bg-gray-50 shadow px-4 rounded-full w-fit justify-self-center">
-    <!-- <div class="max-w-6xl mx-auto px-4"> -->
+<nav class="sticky z-50 bg-gray-50 dark:bg-gray-900 shadow px-4 rounded-full w-fit justify-self-center">
     <div class="flex justify-start items-center space-x-4">
-        <a href="/" class="inline-block font-semibold px-4 py-2 hover:text-gray-400 transition">
+        <a id="home" href="/#home"
+            class="inline-block font-semibold px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
             Home
         </a>
 
-        <a href="/show/list" class="inline-block font-semibold px-4 py-2 hover:text-gray-400 transition">
-            All Shows
+        <a id="start" href="/start#start"
+            class="inline-block font-semibold px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
+            Start?
         </a>
 
-        <a href="/search" class="inline-block font-semibold px-4 py-2 hover:text-gray-400 transition">
+        <a id="comingsoon" href="/comingsoon#comingsoon"
+            class="inline-block font-semibold px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
+            Coming Soon...
+        </a>
+
+        <a id="all" href="/all#all"
+            class="inline-block font-semibold px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
+            All
+        </a>
+
+        <a id="search" href="/search#search"
+            class="inline-block font-semibold px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
             Search
         </a>
 
-        <a href="/logout" class="inline-block font-semibold px-4 py-2 hover:text-gray-400 transition">
+        <a id="about" href="/about#about"
+            class="inline-block font-semibold px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
+            About
+        </a>
+
+        <a id="logout" href="/logout#logout"
+            class="inline-block font-semibold px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
             Log Out
         </a>
     </div>

@@ -12,18 +12,15 @@ import (
 	"time"
 )
 
-func HomeHandler(w http.ResponseWriter, req *http.Request) {
-	email, ok := auth.GetUserEmail(req)
-	if !ok {
-		http.Error(w, "Invalid user", http.StatusUnauthorized)
-		return
-	}
+func OldHomeHandler(w http.ResponseWriter, req *http.Request) {
 
 	userID, ok := auth.GetUserID(req)
 	if !ok {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
 		return
 	}
+
+	fmt.Println(userID)
 
 	// SQL to fetch the User's Shows
 	showResults, err := db.Connection.Query(`SELECT show_id FROM user_shows WHERE user_id = ?`, userID)
@@ -104,8 +101,6 @@ func HomeHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	type HomeData struct {
-		Email   string
-		Query   string
 		ToWatch []ShowData
 		ToStart []ShowData
 		ToWait  []ShowData
@@ -121,7 +116,7 @@ func HomeHandler(w http.ResponseWriter, req *http.Request) {
 	toStartList := append(toStartFinished, toStartContinuing...)
 
 	// Render home page
-	renderTemplate(w, "home", HomeData{Email: email, ToWatch: toWatchList, ToStart: toStartList, ToWait: toWaitList})
+	renderTemplate(w, "home", HomeData{ToWatch: toWatchList, ToStart: toStartList, ToWait: toWaitList})
 }
 
 func toSeasonComma(list []int) string {
@@ -168,6 +163,8 @@ func isFinished(show tvdbapi.ShowDetail) bool {
 	case "returning series":
 		return false
 	case "ended":
+		return true
+	case "canceled":
 		return true
 	default:
 		return false
