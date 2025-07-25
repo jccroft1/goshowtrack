@@ -1,43 +1,45 @@
 {{ define "nav-bar" }}
 
-<nav class="sticky z-50 bg-gray-50 dark:bg-gray-900 shadow px-4 rounded-full w-fit justify-self-center">
-    <div class="flex justify-start items-center space-x-4">
+<nav class="sticky z-50 bg-gray-50 dark:bg-gray-900 shadow px-4 sm:rounded-full w-full sm:w-fit justify-self-center">
+    <div class="flex justify-between items-center sm:space-x-4">
         <a id="home" href="/#home"
-            class="inline-block font-semibold px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
-            Home
+            class="inline-block font-semibold md:px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+            </svg>
         </a>
 
         <a id="start" href="/start#start"
-            class="inline-block font-semibold px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
+            class="inline-block font-semibold px-1 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
             Start?
         </a>
 
         <a id="comingsoon" href="/comingsoon#comingsoon"
-            class="inline-block font-semibold px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
+            class="inline-block font-semibold px-1 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
             Coming Soon...
         </a>
 
         <a id="all" href="/all#all"
-            class="inline-block font-semibold px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
+            class="inline-block font-semibold px-1 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
             All
         </a>
 
-        <a id="search" href="/search#search"
-            class="inline-block font-semibold px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
-            Search
-        </a>
-
         <a id="about" href="/about#about"
-            class="inline-block font-semibold px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
+            class="inline-block font-semibold px-1 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
             About
         </a>
 
-        <a id="logout" href="/logout#logout"
-            class="inline-block font-semibold px-2 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
-            Log Out
+        <a id="search" href="/search#search"
+            class="inline-block font-semibold px-1 py-2 hover:text-gray-400 transition target:text-gray-400 focus:outline-none">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="size-6">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            </svg>
         </a>
     </div>
-    <!-- </div> -->
 </nav>
 
 {{ end }}

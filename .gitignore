@@ -1,2 +1,3 @@
 prod.env
 data.db
+docker-compose.yml

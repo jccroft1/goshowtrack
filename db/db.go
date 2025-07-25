@@ -11,7 +11,7 @@ var Connection *sql.DB
 
 func Setup() {
 	var err error
-	Connection, err = sql.Open("sqlite", "./data.db")
+	Connection, err = sql.Open("sqlite", "./data/data.db")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -20,18 +20,6 @@ func Setup() {
 	_, err = Connection.Exec(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT UNIQUE
-    );`)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Create magic_links table
-	_, err = Connection.Exec(`CREATE TABLE IF NOT EXISTS magic_links (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        token TEXT UNIQUE,
-        email TEXT,
-        expires_at INTEGER,
-        used INTEGER DEFAULT 0
     );`)
 	if err != nil {
 		log.Fatal(err)

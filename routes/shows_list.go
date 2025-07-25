@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -10,13 +9,11 @@ import (
 	"github.com/jccroft1/goshowtrack/tvdbapi"
 )
 
+// AllHandler lists every show the user has added
 func AllHandler(w http.ResponseWriter, req *http.Request) {
 	op := func(userID int64, show *tvdbapi.ShowDetail) (bool, ShowData) {
 		watchedSeasons := 0
 		_ = db.Connection.QueryRow(`SELECT season_number FROM user_seasons WHERE user_id = ? AND show_id = ?`, userID, show.ID).Scan(&watchedSeasons)
-		if watchedSeasons <= 0 {
-			return false, ShowData{}
-		}
 
 		newShowData := ShowData{
 			ID:          show.ID,
@@ -41,6 +38,7 @@ func AllHandler(w http.ResponseWriter, req *http.Request) {
 	listHandler(w, req, op)
 }
 
+// HomeHandler lists unfinished shows the user can watch
 func HomeHandler(w http.ResponseWriter, req *http.Request) {
 	op := func(userID int64, show *tvdbapi.ShowDetail) (bool, ShowData) {
 		watchedSeasons := 0
@@ -85,6 +83,7 @@ func HomeHandler(w http.ResponseWriter, req *http.Request) {
 	listHandler(w, req, op)
 }
 
+// StartHandler lists shows the user can start watching
 func StartHandler(w http.ResponseWriter, req *http.Request) {
 	op := func(userID int64, show *tvdbapi.ShowDetail) (bool, ShowData) {
 		watchedSeasons := 0
@@ -182,8 +181,6 @@ func listHandler(w http.ResponseWriter, r *http.Request, op func(int64, *tvdbapi
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
 		return
 	}
-
-	fmt.Println(userID)
 
 	// SQL to fetch the User's Shows
 	showResults, err := db.Connection.Query(`SELECT show_id FROM user_shows WHERE user_id = ?`, userID)

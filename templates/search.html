@@ -1,13 +1,8 @@
 {{ define "title" }}Search{{ end }}
 
 {{ define "content" }}
-<div class="bg-white dark:bg-black p-8 shadow-md w-full max-w-2xl text-center">
-    <div class="mb-6">
-        {{ template "nav-bar" . }}
-    </div>
-
-    <div class="mb-6">
-        {{ template "search-bar" . }}
-    </div>
+<div class="mb-6">
+    {{ template "search-bar" . }}
 </div>
+
 {{ end }}

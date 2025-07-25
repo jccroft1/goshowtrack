@@ -15,6 +15,11 @@ import (
 	"github.com/jccroft1/goshowtrack/db"
 )
 
+const (
+	baseUrl      string = "https://api.themoviedb.org/3/"
+	baseImageURL string = "https://media.themoviedb.org/t/p/w300_and_h450_bestv2"
+)
+
 type Show struct {
 	ID          int    `json:"id"`
 	Name        string `json:"name"`
@@ -32,14 +37,10 @@ var (
 		Timeout: time.Second,
 	}
 
-	baseUrl string
-	token   string
-
-	baseImageURL string = "https://media.themoviedb.org/t/p/w300_and_h450_bestv2"
+	token string
 )
 
-func Setup(_baseUrl string, _token string) {
-	baseUrl = _baseUrl
+func Setup(_token string) {
 	token = _token
 }
 

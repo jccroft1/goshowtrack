@@ -1,0 +1,12 @@
+services:
+  goshowtrack:
+    image: jccroft1/goshowtrack:latest
+    container_name: goshowtrack
+    ports:
+      - "8080:8080"   # Change the left side to map to a different host port
+    environment:
+      - TVDB_TOKEN=${TVDB_TOKEN}
+      - DISABLE_AUTH=true # comment out if you want authorization behind Cloudflare Zero Trust 
+    volumes:
+      - ./data:/app/data       # Persist data on the host
+    restart: unless-stopped

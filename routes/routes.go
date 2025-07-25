@@ -24,7 +24,6 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 		"templates/"+tmpl+".html",
 		"templates/partials/searchBar.html",
 		"templates/partials/navBar.html",
-		"templates/partials/showList.html",
 	))
 	err := tmpls.ExecuteTemplate(w, "layout", data)
 	if err != nil {
@@ -41,51 +40,16 @@ func userHasAddedShow(userID int64, showID int) bool {
 	return err != sql.ErrNoRows
 }
 
-/*
-WatchedNone
-WatchedSome
-WatchedAll
-
-ReturningNever
-ReturningWithoutDate (combine season announced or not, effectively the same)
-ReturningWithDate
-
-
-
-
-ReadyToWatch - some seasons available to watch
-
-NotStarted - some seasons released, but nothing watched
-
-CaughtUp - all seasons watched, but more coming up
-	This splits further:
-	 - No seasons announced, but Status is Returning Series
-	 - Seasons announced, but no date
-	 - Seasons announced with date
-
-NotReleased - no seasons released
-
-
-Finished - all seasons watched, show ended/cancelled
-*/
-
 func generateActionText(seasons []tvdbapi.Season, watchedSeasons int) (string, string) {
-	/*
-		WatchedCount
-		UnwatchedCount
-		Unreleased
-	*/
 	totalSeasons := getTotalReleasedSeasons(seasons)
 
-	// if watchedSeasons == 0 && totalSeasons > 0 {
-	// 	return fmt.Sprintf("Great news! You've got all %v seasons ready to watch.", totalSeasons), "green"
-	// }
-
 	if totalSeasons == 0 {
+		return "", ""
 		return "This show doesn't have any episodes yet. Stay tuned!", "red"
 	}
 
 	if watchedSeasons == totalSeasons {
+		return "", ""
 		return "You've watched all the available seasons of this show.", "red"
 	}
 
@@ -158,4 +122,51 @@ func isReleased(seasonAirDate string) bool {
 	now := time.Now()
 
 	return now.After(parsedAirDate)
+}
+
+func hasSomethingToWatch(seasons []tvdbapi.Season, watchedSeasons int) ([]int, bool) {
+	if len(seasons) < watchedSeasons {
+		return []int{}, false
+	}
+
+	toWatch := []int{}
+	for _, season := range seasons[watchedSeasons:] {
+		if !isReleased(season.LastAirDate) {
+			break
+		}
+
+		toWatch = append(toWatch, season.Number)
+	}
+
+	return toWatch, len(toWatch) > 0
+}
+
+func isFinished(show tvdbapi.ShowDetail) bool {
+	status := strings.ToLower(show.Status)
+	switch status {
+	case "returning series":
+		return false
+	case "ended", "canceled":
+		return true
+	default:
+		return false
+	}
+}
+
+func getReturningInfo(show tvdbapi.ShowDetail) string {
+	for _, season := range show.Seasons {
+		if isReleased(season.LastAirDate) {
+			continue
+		}
+
+		lastAirDate, err := time.Parse("2006-01-02", season.LastAirDate)
+		if err != nil {
+			break
+		}
+
+		countdown := int(time.Until(lastAirDate).Hours() / 24)
+		return fmt.Sprintf("Returning in %d days", countdown)
+	}
+
+	return "Coming back at some point..."
 }
