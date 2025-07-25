@@ -2,12 +2,13 @@ package routes
 
 import (
 	"database/sql"
-	"gotrack/auth"
-	"gotrack/db"
-	"gotrack/mail"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/jccroft1/goshowtrack/auth"
+	"github.com/jccroft1/goshowtrack/db"
+	"github.com/jccroft1/goshowtrack/mail"
 )
 
 func RootHandler(w http.ResponseWriter, req *http.Request) {

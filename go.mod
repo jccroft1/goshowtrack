@@ -1,4 +1,4 @@
-module gotrack
+module github.com/jccroft1/goshowtrack
 
 go 1.23.0
 

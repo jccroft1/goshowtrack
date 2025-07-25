@@ -2,11 +2,12 @@ package routes
 
 import (
 	"fmt"
-	"gotrack/auth"
-	"gotrack/db"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/jccroft1/goshowtrack/auth"
+	"github.com/jccroft1/goshowtrack/db"
 )
 
 func WatchedHandler(w http.ResponseWriter, r *http.Request) {

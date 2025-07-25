@@ -3,9 +3,10 @@ package auth
 import (
 	"context"
 	"fmt"
-	"gotrack/db"
 	"net/http"
 	"time"
+
+	"github.com/jccroft1/goshowtrack/db"
 
 	"github.com/golang-jwt/jwt"
 )

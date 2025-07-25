@@ -3,14 +3,15 @@ package routes
 import (
 	"database/sql"
 	"fmt"
-	"gotrack/db"
-	"gotrack/tvdbapi"
 	"html/template"
 	"log"
 	"net/http"
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/jccroft1/goshowtrack/db"
+	"github.com/jccroft1/goshowtrack/tvdbapi"
 )
 
 func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
@@ -19,11 +20,11 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 	})
 
 	tmpls := template.Must(tmplBase.ParseFiles(
-		"../../templates/layout.html",
-		"../../templates/"+tmpl+".html",
-		"../../templates/partials/searchBar.html",
-		"../../templates/partials/navBar.html",
-		"../../templates/partials/showList.html",
+		"templates/layout.html",
+		"templates/"+tmpl+".html",
+		"templates/partials/searchBar.html",
+		"templates/partials/navBar.html",
+		"templates/partials/showList.html",
 	))
 	err := tmpls.ExecuteTemplate(w, "layout", data)
 	if err != nil {

@@ -8,10 +8,6 @@ import (
 )
 
 func main() {
-	// http server stub of an API
-	// curl --request GET \
-	// --url 'https://api.themoviedb.org/3/discover/tv?include_adult=false&include_null_first_air_dates=false&language=en-US&page=1&sort_by=popularity.desc' \
-	// --header 'accept: application/json'
 	http.HandleFunc("/search/tv", searchHandler)
 	http.HandleFunc("/tv/", detailsHandler)
 

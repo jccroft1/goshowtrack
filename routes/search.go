@@ -1,9 +1,10 @@
 package routes
 
 import (
-	"gotrack/auth"
-	"gotrack/tvdbapi"
 	"net/http"
+
+	"github.com/jccroft1/goshowtrack/auth"
+	"github.com/jccroft1/goshowtrack/tvdbapi"
 )
 
 func SearchHandler(w http.ResponseWriter, req *http.Request) {

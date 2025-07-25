@@ -2,14 +2,15 @@ package routes
 
 import (
 	"fmt"
-	"gotrack/auth"
-	"gotrack/db"
-	"gotrack/tvdbapi"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/jccroft1/goshowtrack/auth"
+	"github.com/jccroft1/goshowtrack/db"
+	"github.com/jccroft1/goshowtrack/tvdbapi"
 )
 
 func OldHomeHandler(w http.ResponseWriter, req *http.Request) {

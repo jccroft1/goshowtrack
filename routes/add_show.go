@@ -2,12 +2,13 @@ package routes
 
 import (
 	"fmt"
-	"gotrack/auth"
-	"gotrack/db"
-	"gotrack/tvdbapi"
 	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/jccroft1/goshowtrack/auth"
+	"github.com/jccroft1/goshowtrack/db"
+	"github.com/jccroft1/goshowtrack/tvdbapi"
 )
 
 func AddShowHandler(w http.ResponseWriter, r *http.Request) {
