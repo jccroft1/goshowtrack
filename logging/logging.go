@@ -7,6 +7,10 @@ import (
 	"time"
 )
 
+var (
+	Verbose bool
+)
+
 type loggingResponseWriter struct {
 	http.ResponseWriter
 	statusCode int
@@ -38,14 +42,16 @@ func Middleware(next func(w http.ResponseWriter, r *http.Request)) func(w http.R
 		// Log duration
 		duration := time.Since(start)
 
-		// lrw.body.String()
-		log.Printf("[%s] %s %s from %s | Status: %d | Duration: %v\n",
-			r.Method,
-			r.URL.Path,
-			r.Proto,
-			r.RemoteAddr,
-			lrw.statusCode,
-			duration,
-		)
+		if Verbose {
+			log.Printf("[%s] %s %s from %s | Status: %d | Duration: %v\n",
+				r.Method,
+				r.URL.Path,
+				r.Proto,
+				r.RemoteAddr,
+				lrw.statusCode,
+				duration,
+			)
+		}
+
 	})
 }

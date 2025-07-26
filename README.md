@@ -17,7 +17,7 @@ Once that's setup, uncomment `DISABLE_AUTH`.
 ## Development 
 
 ```shell 
-tailwindcss.exe  -o assets/tailwind.css -w -m
+tailwindcss.exe -o assets/tailwind.css -w -m
 go run main.go
 ```
 

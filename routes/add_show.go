@@ -34,7 +34,7 @@ func userShowUpdate(w http.ResponseWriter, r *http.Request, add bool) {
 	}
 
 	// not strictly necessary but checks the show is valid and loads into cache
-	showDetails, err := tvdbapi.GetShowDetails(query)
+	showDetails, err := tvdbapi.GetShowDetails(query, false)
 	if err != nil {
 		log.Println("Error searching TVDB: ", err)
 		http.Error(w, "Error searching TVDB", http.StatusInternalServerError)
@@ -49,17 +49,11 @@ func userShowUpdate(w http.ResponseWriter, r *http.Request, add bool) {
 
 	if add {
 		// SQL to add show to user
-		alreadyAdded := userHasAddedShow(userID, query)
-
-		if !alreadyAdded {
-			sqlQuery := `INSERT INTO user_shows (user_id, show_id) VALUES (?, ?)`
-
-			_, err = db.Connection.Exec(sqlQuery, userID, showDetails.ID)
-			if err != nil {
-				log.Println("Error adding show to user:", err)
-				http.Error(w, "Failed to add show to user", http.StatusInternalServerError)
-				return
-			}
+		err := addShow(userID, showDetails)
+		if err != nil {
+			log.Println("Error adding show to user:", err)
+			http.Error(w, "Failed to add show to user", http.StatusInternalServerError)
+			return
 		}
 	} else {
 		// SQL to remove show from user
@@ -74,4 +68,20 @@ func userShowUpdate(w http.ResponseWriter, r *http.Request, add bool) {
 
 	// redirect to show details page
 	http.Redirect(w, r, fmt.Sprintf("/show/details?id=%v", showDetails.ID), http.StatusSeeOther)
+}
+
+func addShow(userID int64, show *tvdbapi.ShowDetail) error {
+	alreadyAdded := userHasAddedShow(userID, show.ID)
+	if alreadyAdded {
+		return nil
+	}
+
+	sqlQuery := `INSERT INTO user_shows (user_id, show_id) VALUES (?, ?)`
+
+	_, err := db.Connection.Exec(sqlQuery, userID, show.ID)
+	if err != nil {
+		return fmt.Errorf("error adding show to user: %v", err)
+	}
+
+	return nil
 }

@@ -1,0 +1,19 @@
+{{ define "show-status" }}
+
+{{ if eq . "Ended" }}
+<span class="inline-block text-sm font-semibold text-red-700 bg-red-100 px-3 py-1">
+    {{ . }}
+</span>
+{{ else }}
+{{ if eq . "Canceled" }}
+<span class="inline-block text-sm font-semibold text-red-700 bg-red-100 px-3 py-1">
+    {{ . }}
+</span>
+{{ else }}
+<span class="inline-block text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-1">
+    {{ . }}
+</span>
+{{ end }}
+{{ end }}
+
+{{ end }}

@@ -24,7 +24,7 @@ func ShowDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	showDetails, err := tvdbapi.GetShowDetails(showID)
+	showDetails, err := tvdbapi.GetShowDetails(showID, false)
 	if err != nil {
 		log.Println("Error searching TVDB: ", err)
 		http.Error(w, "Error searching TVDB", http.StatusInternalServerError)
@@ -39,8 +39,10 @@ func ShowDetailsHandler(w http.ResponseWriter, r *http.Request) {
 
 	added := userHasAddedShow(userID, showID)
 
-	watchedSeason := 0
-	_ = db.Connection.QueryRow(`SELECT season_number FROM user_seasons WHERE user_id = ? AND show_id = ?`, userID, showID).Scan(&watchedSeason)
+	watchedSeasons := 0
+	_ = db.Connection.QueryRow(`SELECT season_number FROM user_seasons WHERE user_id = ? AND show_id = ?`, userID, showID).Scan(&watchedSeasons)
+
+	unwatchedSeasons, _ := hasSomethingToWatch(showDetails.Seasons, watchedSeasons)
 
 	type Season struct {
 		Number    int
@@ -52,15 +54,14 @@ func ShowDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		Released bool
 	}
 	type ShowData struct {
-		ID               int
-		Name             string
-		AirDate          string
-		Description      string
-		Poster           string
-		Status           string // "Continuing" or "Ended"
-		Seasons          []Season
-		WatchAction      string
-		WatchActionColor string
+		ID          int
+		Name        string
+		AirDate     string
+		Description string
+		Poster      string
+		Status      string // "Continuing" or "Ended"
+		Seasons     []Season
+		Unwatched   int
 	}
 	type Data struct {
 		Added    bool
@@ -76,12 +77,12 @@ func ShowDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		Poster:      showDetails.PosterPath,
 		Status:      showDetails.Status,
 		Seasons:     []Season{}, // Initialize with empty slice
-
+		Unwatched:   len(unwatchedSeasons),
 	}
 
 	for _, season := range showDetails.Seasons {
 
-		watched := season.Number <= watchedSeason
+		watched := season.Number <= watchedSeasons
 		showData.Seasons = append(showData.Seasons, Season{
 			Number:    season.Number,
 			Episodes:  season.EpisodeCount,
@@ -91,8 +92,6 @@ func ShowDetailsHandler(w http.ResponseWriter, r *http.Request) {
 			Released:  isReleased(season.LastAirDate),
 		})
 	}
-
-	showData.WatchAction, showData.WatchActionColor = generateActionText(showDetails.Seasons, watchedSeason)
 
 	data := Data{
 		Added:    added,

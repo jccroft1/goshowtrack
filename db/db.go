@@ -13,7 +13,7 @@ func Setup() {
 	var err error
 	Connection, err = sql.Open("sqlite", "./data/data.db")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("failed to connect to database", err)
 	}
 
 	// Create users table
@@ -28,7 +28,7 @@ func Setup() {
 	// create shows DB
 	_, err = Connection.Exec(`CREATE TABLE IF NOT EXISTS shows (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-		show_id INTEGER, 
+		show_id INTEGER UNIQUE, 
 		name TEXT,
 		status TEXT, 
         air_date TEXT,
@@ -47,7 +47,8 @@ func Setup() {
 		season_number INTEGER,
         episode_count INTEGER, 
 		air_date TEXT, 
-		last_air_date TEXT
+		last_air_date TEXT, 
+		UNIQUE(show_id, season_number)
     );`)
 	if err != nil {
 		log.Fatal(err)

@@ -3,11 +3,29 @@
 {{ define "content" }}
 
 <!-- Show Info -->
-<div class="flex gap-6">
-    <img src="{{ .ShowData.Poster }}" alt="{{ .ShowData.Name }} poster" class="w-40 h-60 object-cover border">
+<div class="flex flex-col sm:flex-row gap-6">
+    <div class="w-40 h-60 relative overflow-hidden shadow-lg mx-auto sm:mx-0">
+        <!-- TV Poster Image -->
+        <a href="/show/details?id={{ .ShowData.ID }}">
+            <img src="{{ .ShowData.Poster }}" alt="TV Poster" class="w-full h-full object-cover">
+        </a>
+
+        {{ if ne .ShowData.Unwatched 0 }}
+        <!-- Badge Icon (absolute child) -->
+        <div class="absolute top-2 right-2 z-10
+                    bg-green-600 text-white dark:text-white text-xs font-bold
+                    rounded-full
+                    w-6 h-6 flex items-center justify-center
+                    shadow-md
+                    select-none">
+            {{ .ShowData.Unwatched }}
+        </div>
+        {{ end }}
+    </div>
+
     <div class="flex-1 space-y-2">
         <div class="flex items-center justify-between">
-            <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+            <h2 class="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
                 {{ .ShowData.Name }} ({{ dateToYear .ShowData.AirDate }})
             </h2>
 
@@ -26,22 +44,7 @@
 
         <p class="text-gray-700 dark:text-gray-300">{{ .ShowData.Description }}</p>
 
-        <!-- Show Status -->
-        {{ if eq .ShowData.Status "Ended" }}
-        <span class="inline-block text-sm font-semibold text-red-700 bg-red-100 px-3 py-1">
-            Ended
-        </span>
-        {{ else }}
-        <span class="inline-block text-sm font-semibold text-gray-700 bg-gray-100 px-3 py-1">
-            {{ .ShowData.Status }}
-        </span>
-        {{ end }}
-
-        <!-- Seasons to Watch -->
-        <div
-            class="w-full px-3 py-2 text-sm font-medium text-{{.ShowData.WatchActionColor}}-800 bg-{{.ShowData.WatchActionColor}}-100 border border-{{.ShowData.WatchActionColor}}-300">
-            {{ .ShowData.WatchAction }}
-        </div>
+        {{ template "show-status" .ShowData.Status }}
     </div>
 </div>
 
@@ -57,44 +60,43 @@
             <thead class="bg-gray-50 dark:bg-gray-950">
                 <tr>
                     <th scope="col"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Season Number
+                        class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     </th>
                     <th scope="col"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Episodes
+                        class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        #
                     </th>
                     <th scope="col"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Start Date
+                        class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        Released
                     </th>
                     <th scope="col"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        End Date
-                    </th>
-                    <th scope="col"
-                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                        Watched Status
+                        class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+
                     </th>
                 </tr>
             </thead>
             <tbody class="bg-white dark:bg-black divide-y divide-gray-200">
                 {{ range .ShowData.Seasons }}
-                <tr
-                    class="{{ if .Watched }}bg-red-50 dark:bg-red-950{{ end }} {{ if not .Released }}bg-orange-50 dark:bg-orange-900{{ end }}">
+                <tr class="{{ if .Watched }}
+                        bg-gray-50 dark:bg-gray-900
+                    {{else}}  
+                        {{ if not .Released }}
+                            bg-orange-50 dark:bg-orange-900
+                        {{else}}
+                            bg-green-50 dark:bg-green-900
+                        {{ end }} 
+                    {{ end }} ">
                     <td class=" px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
                         {{ .Number }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                         {{ .Episodes }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                        {{ .StartDate }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                         {{ .EndDate }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                    <td class="px-2 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                         {{ if .Released }}
 
                         {{ if .Watched }}
@@ -109,7 +111,7 @@
                             class="mark-watched-btn inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
                             data-season-number="{{ .Number }}" data-show-id="{{ $.ShowData.ID }}"
                             onclick="window.location.href='/show/watched?show_id={{ $.ShowData.ID }}&season={{ .Number }}'">
-                            Mark Watched
+                            Watched
                         </button>
                         {{ end }}
 

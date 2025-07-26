@@ -30,7 +30,8 @@ func AllHandler(w http.ResponseWriter, req *http.Request) {
 			newShowData.Status = getReturningInfo(*show)
 		}
 
-		newShowData.WatchAction, newShowData.WatchActionColor = generateActionText(show.Seasons, watchedSeasons)
+		unwatchedSeasons, _ := hasSomethingToWatch(show.Seasons, watchedSeasons)
+		newShowData.Unwatched = len(unwatchedSeasons)
 
 		return true, newShowData
 	}
@@ -74,8 +75,8 @@ func HomeHandler(w http.ResponseWriter, req *http.Request) {
 			newShowData.Order = "1" + show.Seasons[watchedSeasons].AirDate
 		}
 
-		newShowData.WatchAction, _ = generateActionText(show.Seasons, watchedSeasons)
-		newShowData.WatchActionColor = "green"
+		unwatchedSeasons, _ := hasSomethingToWatch(show.Seasons, watchedSeasons)
+		newShowData.Unwatched = len(unwatchedSeasons)
 
 		return true, newShowData
 	}
@@ -92,7 +93,7 @@ func StartHandler(w http.ResponseWriter, req *http.Request) {
 			return false, ShowData{}
 		}
 
-		_, somethingToWatch := hasSomethingToWatch(show.Seasons, watchedSeasons)
+		unwatchedSeasons, somethingToWatch := hasSomethingToWatch(show.Seasons, watchedSeasons)
 
 		if !somethingToWatch {
 			return false, ShowData{}
@@ -106,6 +107,8 @@ func StartHandler(w http.ResponseWriter, req *http.Request) {
 			Poster:      show.PosterPath,
 			Status:      show.Status,
 			SeasonCount: len(show.Seasons),
+
+			Unwatched: len(unwatchedSeasons),
 		}
 		if show.Status == "Returning Series" {
 			newShowData.Status = getReturningInfo(*show)
@@ -159,11 +162,13 @@ func ComingSoonHandler(w http.ResponseWriter, req *http.Request) {
 		// get the air data of the next season that's not yet released
 		for _, season := range show.Seasons {
 			if isReleased(season.LastAirDate) {
+				// 0/1 - hack to put the shows with an unreleased season with a known date first
+				newShowData.Order = "1" + season.LastAirDate
 				continue
 			}
 
 			if season.LastAirDate != "" {
-				newShowData.Order = season.LastAirDate
+				newShowData.Order = "0" + season.LastAirDate
 			}
 
 			break
@@ -201,7 +206,7 @@ func listHandler(w http.ResponseWriter, r *http.Request, op func(int64, *tvdbapi
 			continue
 		}
 
-		show, err := tvdbapi.GetShowDetails(showID)
+		show, err := tvdbapi.GetShowDetails(showID, false)
 		if err != nil {
 			log.Println("Error getting show details: ", err)
 			continue

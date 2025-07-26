@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 	"os"
@@ -13,12 +14,14 @@ import (
 )
 
 func main() {
-	// TVDB API
-	TVDB_TOKEN := os.Getenv("TVDB_TOKEN")
-	log.Println("TVDB_TOKEN:", TVDB_TOKEN)
-	tvdbapi.Setup(TVDB_TOKEN)
+	log.SetFlags(log.Ldate | log.Ltime)
+	flag.BoolVar(&logging.Verbose, "v", false, "enable verbose logging")
+	flag.Parse()
 
 	db.Setup()
+
+	TVDB_TOKEN := os.Getenv("TVDB_TOKEN")
+	tvdbapi.Setup(TVDB_TOKEN)
 
 	DISABLE_AUTH := os.Getenv("DISABLE_AUTH")
 	auth.Setup(DISABLE_AUTH == "true")
@@ -35,10 +38,10 @@ func main() {
 
 	http.HandleFunc("GET /search", logging.Middleware(auth.Middleware(routes.SearchHandler)))
 	http.HandleFunc("POST /search", logging.Middleware(auth.Middleware(routes.SearchResultsHandler)))
+	http.HandleFunc("POST /bulk_add", logging.Middleware(auth.Middleware(routes.BulkAddHandler)))
 	http.HandleFunc("GET /show/details", logging.Middleware(auth.Middleware(routes.ShowDetailsHandler)))
 
 	// show actions
-	// TODO: Make these POST requests
 	http.HandleFunc("GET /show/add", logging.Middleware(auth.Middleware(routes.AddShowHandler)))
 	http.HandleFunc("GET /show/remove", logging.Middleware(auth.Middleware(routes.RemoveShowHandler)))
 	http.HandleFunc("GET /show/watched", logging.Middleware(auth.Middleware(routes.WatchedHandler)))

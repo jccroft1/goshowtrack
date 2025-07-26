@@ -24,6 +24,7 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 		"templates/"+tmpl+".html",
 		"templates/partials/searchBar.html",
 		"templates/partials/navBar.html",
+		"templates/partials/showStatus.html",
 	))
 	err := tmpls.ExecuteTemplate(w, "layout", data)
 	if err != nil {
@@ -40,30 +41,6 @@ func userHasAddedShow(userID int64, showID int) bool {
 	return err != sql.ErrNoRows
 }
 
-func generateActionText(seasons []tvdbapi.Season, watchedSeasons int) (string, string) {
-	totalSeasons := getTotalReleasedSeasons(seasons)
-
-	if totalSeasons == 0 {
-		return "", ""
-		return "This show doesn't have any episodes yet. Stay tuned!", "red"
-	}
-
-	if watchedSeasons == totalSeasons {
-		return "", ""
-		return "You've watched all the available seasons of this show.", "red"
-	}
-
-	if watchedSeasons < totalSeasons {
-		if totalSeasons-watchedSeasons == 1 {
-			return "You have one more season left to watch!", "green"
-		}
-
-		return fmt.Sprintf("You've got %v more seasons ready to watch!", totalSeasons-watchedSeasons), "green"
-	}
-
-	return "Unknown", "grey"
-}
-
 // Render the results to the user
 type ShowData struct {
 	// TVDB Data
@@ -76,9 +53,8 @@ type ShowData struct {
 	SeasonCount int
 
 	// UI features
-	Order            string
-	WatchAction      string
-	WatchActionColor string
+	Order     string
+	Unwatched int
 }
 
 func orderShows(shows []ShowData) []ShowData {
@@ -94,18 +70,6 @@ func dateToYear(s string) string {
 		out = s[0:4]
 	}
 	return out
-}
-
-func getTotalReleasedSeasons(seasons []tvdbapi.Season) int {
-	releasedSeasons := 0
-	for _, season := range seasons {
-		if !isReleased(season.LastAirDate) {
-			continue
-		}
-
-		releasedSeasons++
-	}
-	return releasedSeasons
 }
 
 func isReleased(seasonAirDate string) bool {

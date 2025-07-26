@@ -8,6 +8,11 @@ import (
 )
 
 func SearchHandler(w http.ResponseWriter, req *http.Request) {
+	if req.URL.Query().Get("bulk") == "true" {
+		renderTemplate(w, "searchBulk", nil)
+		return
+	}
+
 	renderTemplate(w, "search", nil)
 }
 

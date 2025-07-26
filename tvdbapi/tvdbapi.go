@@ -36,12 +36,53 @@ var (
 	client = &http.Client{
 		Timeout: time.Second,
 	}
+	limiter = time.Tick(200 * time.Millisecond)
 
 	token string
 )
 
 func Setup(_token string) {
 	token = _token
+
+	go func() {
+		t := time.Tick(time.Hour * 48)
+		for range t {
+			refreshShows()
+		}
+	}()
+}
+
+func refreshShows() {
+	log.Println("Refreshing shows...")
+
+	rows, err := db.Connection.Query("SELECT show_id FROM shows")
+	if err != nil {
+		log.Println("failed to load show ids", err)
+		return
+	}
+
+	var ids []int
+	for rows.Next() {
+		var id int
+		err := rows.Scan(&id)
+		if err != nil {
+			log.Println("failed to scan show id", err)
+			continue
+		}
+
+		ids = append(ids, id)
+	}
+	rows.Close()
+
+	for _, id := range ids {
+		fmt.Println("Refreshing show: ", id)
+		_, err = GetShowDetails(id, true)
+		if err != nil {
+			log.Println("failed to get show details", err)
+			continue
+		}
+	}
+	log.Println("Refresh complete.")
 }
 
 func SearchShow(query string) ([]Show, error) {
@@ -90,39 +131,38 @@ type Episode struct {
 
 // https://developer.themoviedb.org/reference/tv-series-details
 // https://developer.themoviedb.org/reference/tv-season-details
-func GetShowDetails(id int) (*ShowDetail, error) {
-	// attempt to load from DB
-	var show ShowDetail
-	err := db.Connection.QueryRow("SELECT show_id, name, status, air_date, description, poster_path FROM shows WHERE show_id = ?", id).
-		Scan(&show.ID, &show.Name, &show.Status, &show.AirDate, &show.Description, &show.PosterPath)
-	if err != sql.ErrNoRows {
-		log.Println("TVDB API:", "loaded show from cache", show.Name)
-
-		// load seasons
-		rows, err := db.Connection.Query("SELECT name, episode_count, season_number, air_date, last_air_date FROM seasons WHERE show_id = ?", id)
-		if err != nil {
-			return nil, fmt.Errorf("failed to query seasons: %v", err)
-		}
-		defer rows.Close()
-
-		seasons := []Season{}
-		for rows.Next() {
-			var season Season
-			err := rows.Scan(&season.Name, &season.EpisodeCount, &season.Number, &season.AirDate, &season.LastAirDate)
+func GetShowDetails(id int, forceRefresh bool) (*ShowDetail, error) {
+	if !forceRefresh {
+		var show ShowDetail
+		err := db.Connection.QueryRow("SELECT show_id, name, status, air_date, description, poster_path FROM shows WHERE show_id = ?", id).
+			Scan(&show.ID, &show.Name, &show.Status, &show.AirDate, &show.Description, &show.PosterPath)
+		if err != sql.ErrNoRows {
+			// load seasons
+			rows, err := db.Connection.Query("SELECT name, episode_count, season_number, air_date, last_air_date FROM seasons WHERE show_id = ?", id)
 			if err != nil {
-				return nil, fmt.Errorf("failed to scan season: %v", err)
+				return nil, fmt.Errorf("failed to query seasons: %v", err)
 			}
-			seasons = append(seasons, season)
+			defer rows.Close()
+
+			seasons := []Season{}
+			for rows.Next() {
+				var season Season
+				err := rows.Scan(&season.Name, &season.EpisodeCount, &season.Number, &season.AirDate, &season.LastAirDate)
+				if err != nil {
+					return nil, fmt.Errorf("failed to scan season: %v", err)
+				}
+				seasons = append(seasons, season)
+			}
+
+			show.Seasons = seasons
+
+			return &show, err
 		}
-
-		show.Seasons = seasons
-
-		return &show, err
 	}
 
 	// actual request
 	var response ShowDetail
-	err = getRequest("tv/"+strconv.Itoa(id), &response)
+	err := getRequest("tv/"+strconv.Itoa(id), &response)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +187,6 @@ func GetShowDetails(id int) (*ShowDetail, error) {
 		}
 
 		if len(season.Episodes) == 0 {
-			// response.Seasons[i].LastAirDate = "9999-01-01"
 			continue
 		}
 
@@ -159,14 +198,29 @@ func GetShowDetails(id int) (*ShowDetail, error) {
 	}
 
 	// save to DB
-	_, err = db.Connection.Exec(`INSERT INTO shows (show_id, name, status, air_date, description, poster_path) VALUES (?, ?, ?, ?, ?, ?);`,
+	query := `INSERT INTO shows (show_id, name, status, air_date, description, poster_path) 
+	VALUES (?, ?, ?, ?, ?, ?)
+	ON CONFLICT(show_id) DO UPDATE SET
+		name = excluded.name, 
+		status = excluded.status, 
+		air_date = excluded.air_date, 
+		description = excluded.description, 
+		poster_path = excluded.poster_path;`
+	_, err = db.Connection.Exec(query,
 		response.ID, response.Name, response.Status, response.AirDate, response.Description, response.PosterPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	for _, s := range response.Seasons {
-		_, err = db.Connection.Exec(`INSERT INTO seasons (show_id, name, season_number, episode_count, air_date, last_air_date) VALUES (?, ?, ?, ?, ?, ?);`,
+		query = `INSERT INTO seasons (show_id, name, season_number, episode_count, air_date, last_air_date) 
+		VALUES (?, ?, ?, ?, ?, ?)
+		ON CONFLICT(show_id, season_number) DO UPDATE SET
+			name = excluded.name, 
+			episode_count = excluded.episode_count, 
+			air_date = excluded.air_date, 
+			last_air_date = excluded.last_air_date;`
+		_, err = db.Connection.Exec(query,
 			response.ID, s.Name, s.Number, s.EpisodeCount, s.AirDate, s.LastAirDate)
 		if err != nil {
 			log.Fatal(err)
@@ -184,7 +238,7 @@ func getRequest(relativeURL string, output interface{}) error {
 	}
 
 	req.Header.Set("Authorization", "Bearer "+token)
-	log.Println("TVDB API:", req.URL)
+	<-limiter
 	res, err := client.Do(req)
 	if err != nil {
 		return err
