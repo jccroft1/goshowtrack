@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/jccroft1/goshowtrack/auth"
 	"github.com/jccroft1/goshowtrack/db"
@@ -18,7 +22,8 @@ func main() {
 	flag.BoolVar(&logging.Verbose, "v", false, "enable verbose logging")
 	flag.Parse()
 
-	db.Setup()
+	dbClose := db.Setup()
+	defer dbClose()
 
 	TVDB_TOKEN := os.Getenv("TVDB_TOKEN")
 	tvdbapi.Setup(TVDB_TOKEN)
@@ -26,27 +31,61 @@ func main() {
 	DISABLE_AUTH := os.Getenv("DISABLE_AUTH")
 	auth.Setup(DISABLE_AUTH == "true")
 
+	// Setup server
+	mux := http.NewServeMux()
+
 	fs := http.FileServer(http.Dir("./assets/"))
-	http.Handle("GET /assets/", http.StripPrefix("/assets/", fs))
+	mux.Handle("GET /assets/", http.StripPrefix("/assets/", fs))
 
 	// main pages
-	http.HandleFunc("GET /", logging.Middleware(auth.Middleware(routes.HomeHandler)))
-	http.HandleFunc("GET /about", logging.Middleware(auth.Middleware(routes.AboutHandler)))
-	http.HandleFunc("GET /start", logging.Middleware(auth.Middleware(routes.StartHandler)))
-	http.HandleFunc("GET /comingsoon", logging.Middleware(auth.Middleware(routes.ComingSoonHandler)))
-	http.HandleFunc("GET /all", logging.Middleware(auth.Middleware(routes.AllHandler)))
+	mux.HandleFunc("GET /", logging.Middleware(auth.Middleware(routes.HomeHandler)))
+	mux.HandleFunc("GET /about", logging.Middleware(auth.Middleware(routes.AboutHandler)))
+	mux.HandleFunc("GET /start", logging.Middleware(auth.Middleware(routes.StartHandler)))
+	mux.HandleFunc("GET /comingsoon", logging.Middleware(auth.Middleware(routes.ComingSoonHandler)))
+	mux.HandleFunc("GET /all", logging.Middleware(auth.Middleware(routes.AllHandler)))
 
-	http.HandleFunc("GET /search", logging.Middleware(auth.Middleware(routes.SearchHandler)))
-	http.HandleFunc("POST /search", logging.Middleware(auth.Middleware(routes.SearchResultsHandler)))
-	http.HandleFunc("POST /bulk_add", logging.Middleware(auth.Middleware(routes.BulkAddHandler)))
-	http.HandleFunc("GET /show/details", logging.Middleware(auth.Middleware(routes.ShowDetailsHandler)))
+	mux.HandleFunc("GET /search", logging.Middleware(auth.Middleware(routes.SearchHandler)))
+	mux.HandleFunc("POST /search", logging.Middleware(auth.Middleware(routes.SearchResultsHandler)))
+	mux.HandleFunc("POST /bulk_add", logging.Middleware(auth.Middleware(routes.BulkAddHandler)))
+	mux.HandleFunc("GET /show/details", logging.Middleware(auth.Middleware(routes.ShowDetailsHandler)))
 
 	// show actions
-	http.HandleFunc("GET /show/add", logging.Middleware(auth.Middleware(routes.AddShowHandler)))
-	http.HandleFunc("GET /show/remove", logging.Middleware(auth.Middleware(routes.RemoveShowHandler)))
-	http.HandleFunc("GET /show/watched", logging.Middleware(auth.Middleware(routes.WatchedHandler)))
-	http.HandleFunc("GET /show/unwatched", logging.Middleware(auth.Middleware(routes.UnwatchedHandler)))
+	mux.HandleFunc("GET /show/add", logging.Middleware(auth.Middleware(routes.AddShowHandler)))
+	mux.HandleFunc("GET /show/remove", logging.Middleware(auth.Middleware(routes.RemoveShowHandler)))
+	mux.HandleFunc("GET /show/watched", logging.Middleware(auth.Middleware(routes.WatchedHandler)))
+	mux.HandleFunc("GET /show/unwatched", logging.Middleware(auth.Middleware(routes.UnwatchedHandler)))
 
-	log.Println("Server running on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: mux,
+	}
+
+	// Run server
+	go func() {
+		log.Println("Server running on http://localhost:8080")
+
+		err := server.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server error: %v", err)
+		}
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
+
+	// Wait for signal
+	<-stop
+	log.Println("Shutting down server...")
+
+	// Graceful shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Shutdown HTTP server
+	err := server.Shutdown(ctx)
+	if err != nil {
+		log.Fatalf("Server shutdown failed: %v", err)
+	}
+
+	log.Println("Server shutdown complete.")
 }
