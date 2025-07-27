@@ -17,6 +17,9 @@ func Setup() func() {
 	if err != nil {
 		log.Fatal("failed to connect to database", err)
 	}
+	Connection.SetMaxOpenConns(1)
+	Connection.SetConnMaxLifetime(0)
+	Connection.SetMaxIdleConns(1)
 
 	_, err = Connection.Exec(`
 		PRAGMA synchronous = NORMAL;
