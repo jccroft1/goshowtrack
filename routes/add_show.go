@@ -22,6 +22,7 @@ func RemoveShowHandler(w http.ResponseWriter, r *http.Request) {
 func userShowUpdate(w http.ResponseWriter, r *http.Request, add bool) {
 	queryStr := r.URL.Query().Get("id")
 	if queryStr == "" {
+		log.Println("No ID provided")
 		http.Error(w, "No ID provided", http.StatusBadRequest)
 		return
 	}

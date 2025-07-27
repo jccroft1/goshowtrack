@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/jccroft1/goshowtrack/auth"
@@ -19,18 +20,21 @@ func SearchHandler(w http.ResponseWriter, req *http.Request) {
 func SearchResultsHandler(w http.ResponseWriter, req *http.Request) {
 	userID, ok := auth.GetUserID(req)
 	if !ok {
+		log.Println("user not authenticated")
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
 		return
 	}
 
 	query := req.FormValue("query")
 	if query == "" {
+		log.Println("search request missing 'query'")
 		http.Error(w, "Query is required", http.StatusBadRequest)
 		return
 	}
 
 	searchResults, err := tvdbapi.SearchShow(query)
 	if err != nil {
+		log.Println("search failed", err)
 		http.Error(w, "Failed to search TVDB", http.StatusInternalServerError)
 		return
 	}

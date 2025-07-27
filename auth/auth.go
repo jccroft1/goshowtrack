@@ -97,6 +97,7 @@ func Middleware(next func(w http.ResponseWriter, r *http.Request)) func(w http.R
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		id, email, ok := Validate(r)
 		if !ok {
+			log.Println("Invalid user credentials", r.URL)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}

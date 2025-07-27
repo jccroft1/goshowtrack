@@ -18,6 +18,7 @@ func BulkAddHandler(w http.ResponseWriter, req *http.Request) {
 
 	query := req.FormValue("query")
 	if query == "" {
+		log.Println("bulk add missing 'query'")
 		http.Error(w, "Query is required", http.StatusBadRequest)
 		return
 	}
@@ -32,6 +33,7 @@ func BulkAddHandler(w http.ResponseWriter, req *http.Request) {
 
 		shows, err := tvdbapi.SearchShow(line)
 		if err != nil {
+			log.Println("Error searching TVDB: ", err)
 			http.Error(w, "Failed to search TVDB", http.StatusInternalServerError)
 			return
 		}
