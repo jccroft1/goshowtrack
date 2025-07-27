@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
 	"strconv"
@@ -40,7 +41,12 @@ func ShowDetailsHandler(w http.ResponseWriter, r *http.Request) {
 	added := userHasAddedShow(userID, showID)
 
 	watchedSeasons := 0
-	_ = db.Connection.QueryRow(`SELECT season_number FROM user_seasons WHERE user_id = ? AND show_id = ?`, userID, showID).Scan(&watchedSeasons)
+	err = db.Connection.QueryRow(`SELECT season_number FROM user_seasons WHERE user_id = ? AND show_id = ?`, userID, showID).Scan(&watchedSeasons)
+	if err != nil && err != sql.ErrNoRows {
+		log.Println("Failed to get users watched seasons", err)
+		http.Error(w, "Error querying database", http.StatusInternalServerError)
+		return
+	}
 
 	unwatchedSeasons, _ := hasSomethingToWatch(showDetails.Seasons, watchedSeasons)
 
