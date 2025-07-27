@@ -51,7 +51,12 @@ func BulkAddHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		addShow(userID, showDetails)
+		err = addShow(userID, showDetails)
+		if err != nil {
+			log.Println("Failed to add show: ", err)
+			http.Error(w, "Failed to add show", http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// redirect to /all page

@@ -136,6 +136,9 @@ func GetShowDetails(id int, forceRefresh bool) (*ShowDetail, error) {
 		var show ShowDetail
 		err := db.Connection.QueryRow("SELECT show_id, name, status, air_date, description, poster_path FROM shows WHERE show_id = ?", id).
 			Scan(&show.ID, &show.Name, &show.Status, &show.AirDate, &show.Description, &show.PosterPath)
+		if err != nil && err != sql.ErrNoRows {
+			return nil, fmt.Errorf("failed to check show details in DB: %v", err)
+		}
 		if err != sql.ErrNoRows {
 			// load seasons
 			rows, err := db.Connection.Query("SELECT name, episode_count, season_number, air_date, last_air_date FROM seasons WHERE show_id = ?", id)
@@ -209,7 +212,8 @@ func GetShowDetails(id int, forceRefresh bool) (*ShowDetail, error) {
 	_, err = db.Connection.Exec(query,
 		response.ID, response.Name, response.Status, response.AirDate, response.Description, response.PosterPath)
 	if err != nil {
-		log.Fatal(err)
+		return &ShowDetail{}, fmt.Errorf("failed to insert show: %v", err)
+
 	}
 
 	for _, s := range response.Seasons {
@@ -223,7 +227,7 @@ func GetShowDetails(id int, forceRefresh bool) (*ShowDetail, error) {
 		_, err = db.Connection.Exec(query,
 			response.ID, s.Name, s.Number, s.EpisodeCount, s.AirDate, s.LastAirDate)
 		if err != nil {
-			log.Fatal(err)
+			return &ShowDetail{}, fmt.Errorf("failed to insert season: %v", err)
 		}
 	}
 

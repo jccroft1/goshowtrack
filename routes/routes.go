@@ -37,6 +37,10 @@ func renderTemplate(w http.ResponseWriter, tmpl string, data interface{}) {
 func userHasAddedShow(userID int64, showID int) bool {
 	var id int
 	err := db.Connection.QueryRow("SELECT user_id FROM user_shows WHERE show_id = ? AND user_id = ?", showID, userID).Scan(&id)
+	if err != nil && err != sql.ErrNoRows {
+		log.Println("Error checking if user has added show: ", err)
+		return false
+	}
 
 	return err != sql.ErrNoRows
 }
