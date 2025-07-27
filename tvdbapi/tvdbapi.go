@@ -36,7 +36,7 @@ var (
 	client = &http.Client{
 		Timeout: time.Second,
 	}
-	limiter = time.Tick(200 * time.Millisecond)
+	limiter = time.Tick(50 * time.Millisecond)
 
 	token string
 )
