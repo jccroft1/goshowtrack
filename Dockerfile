@@ -30,6 +30,9 @@ COPY --from=builder /app/templates ./templates
 COPY --from=builder /app/assets ./assets
 COPY --from=builder /app/data ./data
 
+# Copy CA certs manually
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
 # Expose internal port
 EXPOSE 8080
 
