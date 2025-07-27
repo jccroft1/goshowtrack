@@ -61,16 +61,19 @@ func Validate(req *http.Request) (int64, string, bool) {
 	// Store user if new
 	result, err := db.Connection.Exec(`INSERT OR IGNORE INTO users (email) VALUES (?)`, email)
 	if err != nil {
+		log.Println("Failed to insert user", err)
 		return 0, "", false
 	}
 	userID, err := result.LastInsertId()
 	if err != nil {
+		log.Println("Failed to get last insert UserID", err)
 		return 0, "", false
 	}
 	if userID == 0 {
 		// fetch user if existing
 		userResults := db.Connection.QueryRow(`SELECT id FROM users WHERE email = ?`, email)
 		if userResults.Err() != nil {
+			log.Println("Failed to get UserID", err)
 			return 0, "", false
 		}
 		userResults.Scan(&userID)
