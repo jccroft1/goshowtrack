@@ -25,7 +25,7 @@ go run main.go
 
 * Golang 
     * html/template
-* Sqlite 
+* SQLite DB 
 * Tailwind CSS
-    * + heroicons
+    * heroicons
 * TVDB API 

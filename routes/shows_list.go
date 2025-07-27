@@ -11,6 +11,11 @@ import (
 
 // AllHandler lists every show the user has added
 func AllHandler(w http.ResponseWriter, req *http.Request) {
+	sortType := req.URL.Query().Get("sort")
+	if sortType == "" {
+		sortType = "name"
+	}
+
 	op := func(userID int64, show *tvdbapi.ShowDetail) (bool, ShowData) {
 		watchedSeasons := 0
 		_ = db.Connection.QueryRow(`SELECT season_number FROM user_seasons WHERE user_id = ? AND show_id = ?`, userID, show.ID).Scan(&watchedSeasons)
@@ -26,6 +31,7 @@ func AllHandler(w http.ResponseWriter, req *http.Request) {
 
 			Order: show.Name,
 		}
+
 		if show.Status == "Returning Series" {
 			newShowData.Status = getReturningInfo(*show)
 		}
@@ -33,10 +39,47 @@ func AllHandler(w http.ResponseWriter, req *http.Request) {
 		unwatchedSeasons, _ := hasSomethingToWatch(show.Seasons, watchedSeasons)
 		newShowData.Unwatched = len(unwatchedSeasons)
 
+		finished := isFinished(*show)
+
+		switch sortType {
+		case "first_release":
+			newShowData.Order = show.AirDate
+		case "watch_status":
+			if watchedSeasons > 0 && len(unwatchedSeasons) > 0 {
+				// started, something to watch
+				newShowData.Order = "0"
+				if finished {
+					newShowData.Order += "0"
+				} else {
+					newShowData.Order += "1"
+				}
+				newShowData.Order += show.Seasons[watchedSeasons].AirDate
+			} else if len(unwatchedSeasons) > 0 {
+				// not started
+				newShowData.Order = "1"
+				if finished {
+					newShowData.Order += "0"
+				} else {
+					newShowData.Order += "1"
+				}
+				newShowData.Order += show.Seasons[watchedSeasons].AirDate
+			} else {
+				// watched all
+				newShowData.Order = "2"
+				if !finished {
+					// coming back
+					newShowData.Order += "0"
+				} else {
+					newShowData.Order += "1"
+				}
+				newShowData.Order += show.AirDate
+			}
+		}
+
 		return true, newShowData
 	}
 
-	listHandler(w, req, op)
+	listHandler(w, req, op, sortType)
 }
 
 // HomeHandler lists unfinished shows the user can watch
@@ -48,7 +91,7 @@ func HomeHandler(w http.ResponseWriter, req *http.Request) {
 			return false, ShowData{}
 		}
 
-		_, somethingToWatch := hasSomethingToWatch(show.Seasons, watchedSeasons)
+		unwatchedSeasons, somethingToWatch := hasSomethingToWatch(show.Seasons, watchedSeasons)
 
 		if !somethingToWatch {
 			return false, ShowData{}
@@ -62,6 +105,8 @@ func HomeHandler(w http.ResponseWriter, req *http.Request) {
 			Poster:      show.PosterPath,
 			Status:      show.Status,
 			SeasonCount: len(show.Seasons),
+
+			Unwatched: len(unwatchedSeasons),
 		}
 		if show.Status == "Returning Series" {
 			newShowData.Status = getReturningInfo(*show)
@@ -70,18 +115,16 @@ func HomeHandler(w http.ResponseWriter, req *http.Request) {
 		finished := isFinished(*show)
 
 		if finished {
-			newShowData.Order = "0" + show.Seasons[watchedSeasons].AirDate
+			newShowData.Order = "0"
 		} else {
-			newShowData.Order = "1" + show.Seasons[watchedSeasons].AirDate
+			newShowData.Order = "1"
 		}
-
-		unwatchedSeasons, _ := hasSomethingToWatch(show.Seasons, watchedSeasons)
-		newShowData.Unwatched = len(unwatchedSeasons)
+		newShowData.Order += show.Seasons[watchedSeasons].AirDate
 
 		return true, newShowData
 	}
 
-	listHandler(w, req, op)
+	listHandler(w, req, op, "")
 }
 
 // StartHandler lists shows the user can start watching
@@ -117,15 +160,16 @@ func StartHandler(w http.ResponseWriter, req *http.Request) {
 		finished := isFinished(*show)
 
 		if finished {
-			newShowData.Order = "0" + show.Seasons[watchedSeasons].AirDate
+			newShowData.Order = "0"
 		} else {
-			newShowData.Order = "1" + show.Seasons[watchedSeasons].AirDate
+			newShowData.Order = "1"
 		}
+		newShowData.Order += show.Seasons[watchedSeasons].AirDate
 
 		return true, newShowData
 	}
 
-	listHandler(w, req, op)
+	listHandler(w, req, op, "")
 }
 
 func ComingSoonHandler(w http.ResponseWriter, req *http.Request) {
@@ -177,10 +221,10 @@ func ComingSoonHandler(w http.ResponseWriter, req *http.Request) {
 		return true, newShowData
 	}
 
-	listHandler(w, req, op)
+	listHandler(w, req, op, "")
 }
 
-func listHandler(w http.ResponseWriter, r *http.Request, op func(int64, *tvdbapi.ShowDetail) (bool, ShowData)) {
+func listHandler(w http.ResponseWriter, r *http.Request, op func(int64, *tvdbapi.ShowDetail) (bool, ShowData), sort string) {
 	userID, ok := auth.GetUserID(r)
 	if !ok {
 		http.Error(w, "User not authenticated", http.StatusUnauthorized)
@@ -222,11 +266,12 @@ func listHandler(w http.ResponseWriter, r *http.Request, op func(int64, *tvdbapi
 	}
 
 	type ListData struct {
+		Sort string
 		List []ShowData
 	}
 
 	orderShows(list)
 
 	// Render home page
-	renderTemplate(w, "showsList", ListData{List: list})
+	renderTemplate(w, "showsList", ListData{Sort: sort, List: list})
 }

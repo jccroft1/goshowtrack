@@ -2,6 +2,33 @@
 
 {{ define "content" }}
 
+{{ if ne .Sort "" }}
+<div class="flex flex-wrap gap-2 justify-left shadow-sm">
+    {{ $currentSort := .Sort }}
+    {{ $baseClasses := "px-4 py-2 text-sm rounded-full dark:focus:ring-offset-gray-900 font-semibold" }}
+    {{ $activeClasses := "bg-blue-600 text-white shadow-md hover:bg-blue-700 focus:ring-blue-600" }}
+    {{ $inactiveClasses := "bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-100" }}
+
+    <span class="text-gray-600 dark:text-gray-300 font-semibold px-2 text-xl select-none">Sort: </span>
+
+    <a href="/all?sort=name#all" class="{{ $baseClasses }} {{ if eq .Sort "name" }}{{ $activeClasses
+        }}{{ else }}{{ $inactiveClasses }}{{ end }}">
+        Name
+    </a>
+
+    <a href="/all?sort=watch_status#all" class="{{ $baseClasses }} {{ if eq .Sort "watch_status" }}{{ $activeClasses
+        }}{{ else }}{{ $inactiveClasses }}{{ end }}">
+        Watch Status
+    </a>
+
+    <a href="/all?sort=first_release#all" class="{{ $baseClasses }} {{ if eq .Sort "first_release" }}{{ $activeClasses
+        }}{{ else }}{{ $inactiveClasses }}{{ end }}">
+        Age
+    </a>
+</div>
+{{ end }}
+
+
 {{ if .List }}
 <ul class="space-y-6">
     {{ range .List }}
