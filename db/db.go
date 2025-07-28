@@ -6,19 +6,19 @@ import (
 	"log"
 	"time"
 
-	_ "modernc.org/sqlite"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var Connection *sql.DB
 
 func Setup() func() {
 	var err error
-	Connection, err = sql.Open("sqlite", "file:./data/data.db?_busy_timeout=5000&_txlock=immediate")
+	Connection, err = sql.Open("sqlite3", "file:./data/data.db?_journal_mode=WAL&_busy_timeout=5000")
 	if err != nil {
 		log.Fatal("failed to connect to database", err)
 	}
-	Connection.SetMaxOpenConns(5)
-	Connection.SetMaxIdleConns(2)
+	Connection.SetMaxOpenConns(2)
+	Connection.SetMaxIdleConns(1)
 	Connection.SetConnMaxLifetime(0)
 
 	_, err = Connection.Exec(`
