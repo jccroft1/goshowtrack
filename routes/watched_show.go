@@ -51,23 +51,20 @@ func userWatchedUpdate(w http.ResponseWriter, r *http.Request, watched bool) {
 		return
 	}
 
-	_, err = db.Connection.Exec("DELETE FROM user_seasons WHERE user_id = ? AND show_id = ?", userID, showID)
-	if err != nil {
-		log.Println("Error removing season from user", err)
-		http.Error(w, "Error removing season from user", http.StatusInternalServerError)
-		return
-	}
 	if !watched {
 		seasonNumber--
 	}
 
-	if seasonNumber >= 1 {
-		_, err = db.Connection.Exec("INSERT OR IGNORE INTO user_seasons (user_id, show_id, season_number) VALUES (?, ?, ?)", userID, showID, seasonNumber)
-		if err != nil {
-			log.Println("Error adding season to user", err)
-			http.Error(w, "Error adding season to user", http.StatusInternalServerError)
-			return
-		}
+	query := `INSERT INTO user_seasons (user_id, show_id, season_number) 
+	VALUES (?, ?, ?)
+	ON CONFLICT(user_id, show_id) DO UPDATE SET
+		season_number = EXCLUDED.season_number;`
+
+	_, err = db.Connection.Exec(query, userID, showID, seasonNumber)
+	if err != nil {
+		log.Println("Error adding season to user", err)
+		http.Error(w, "Error adding season to user", http.StatusInternalServerError)
+		return
 	}
 
 	// redirect to show details page
