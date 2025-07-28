@@ -13,7 +13,7 @@ var Connection *sql.DB
 
 func Setup() func() {
 	var err error
-	Connection, err = sql.Open("sqlite3", "file:./data/data.db?_journal_mode=WAL&_busy_timeout=5000")
+	Connection, err = sql.Open("sqlite3", "file:./data/data.db?_journal_mode=DELETE&_busy_timeout=5000")
 	if err != nil {
 		log.Fatal("failed to connect to database", err)
 	}

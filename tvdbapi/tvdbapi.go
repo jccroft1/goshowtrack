@@ -134,8 +134,8 @@ type Episode struct {
 func GetShowDetails(id int, forceRefresh bool) (*ShowDetail, error) {
 	if !forceRefresh {
 		var show ShowDetail
-		err := db.Connection.QueryRow("SELECT show_id, name, status, air_date, description, poster_path FROM shows WHERE show_id = ?", id).
-			Scan(&show.ID, &show.Name, &show.Status, &show.AirDate, &show.Description, &show.PosterPath)
+		row := db.Connection.QueryRow("SELECT show_id, name, status, air_date, description, poster_path FROM shows WHERE show_id = ?", id)
+		err := row.Scan(&show.ID, &show.Name, &show.Status, &show.AirDate, &show.Description, &show.PosterPath)
 		if err != nil && err != sql.ErrNoRows {
 			return nil, fmt.Errorf("failed to check show details in DB: %v", err)
 		}

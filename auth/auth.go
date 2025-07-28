@@ -71,12 +71,11 @@ func Validate(req *http.Request) (int64, string, bool) {
 	}
 	if userID == 0 {
 		// fetch user if existing
-		userResults := db.Connection.QueryRow(`SELECT id FROM users WHERE email = ?`, email)
-		if userResults.Err() != nil {
+		err = db.Connection.QueryRow(`SELECT id FROM users WHERE email = ?`, email).Scan(&userID)
+		if err != nil {
 			log.Println("Failed to get UserID", err)
 			return 0, "", false
 		}
-		userResults.Scan(&userID)
 	}
 
 	return userID, email, true
