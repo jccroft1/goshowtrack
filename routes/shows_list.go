@@ -255,10 +255,9 @@ func listHandler(w http.ResponseWriter, r *http.Request, op func(int64, *tvdbapi
 		http.Error(w, "Failed to fetch user shows", http.StatusInternalServerError)
 		return
 	}
-	defer showResults.Close()
 
-	var list []ShowData
-
+	// Fetch all shows for the user
+	var showIDs []int
 	for showResults.Next() {
 		var showID int
 		err := showResults.Scan(&showID)
@@ -266,7 +265,12 @@ func listHandler(w http.ResponseWriter, r *http.Request, op func(int64, *tvdbapi
 			log.Println("Error scanning row: ", err)
 			continue
 		}
+		showIDs = append(showIDs, showID)
+	}
+	showResults.Close()
 
+	var list []ShowData
+	for _, showID := range showIDs {
 		show, err := tvdbapi.GetShowDetails(showID, false)
 		if err != nil {
 			log.Println("Error getting show details: ", err)
