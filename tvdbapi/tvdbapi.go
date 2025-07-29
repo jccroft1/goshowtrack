@@ -209,17 +209,10 @@ func GetShowDetails(id int, forceRefresh bool) (*ShowDetail, error) {
 		air_date = excluded.air_date, 
 		description = excluded.description, 
 		poster_path = excluded.poster_path;`
-	res, err := db.Connection.Exec(query,
+	_, err = db.Connection.Exec(query,
 		response.ID, response.Name, response.Status, response.AirDate, response.Description, response.PosterPath)
 	if err != nil {
 		return &ShowDetail{}, fmt.Errorf("failed to insert show: %v", err)
-	}
-
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		log.Printf("RowsAffected error: %v", err)
-	} else {
-		log.Printf("Rows affected: %d", rowsAffected)
 	}
 
 	for _, s := range response.Seasons {
@@ -230,17 +223,10 @@ func GetShowDetails(id int, forceRefresh bool) (*ShowDetail, error) {
 			episode_count = excluded.episode_count, 
 			air_date = excluded.air_date, 
 			last_air_date = excluded.last_air_date;`
-		res, err = db.Connection.Exec(query,
+		_, err = db.Connection.Exec(query,
 			response.ID, s.Name, s.Number, s.EpisodeCount, s.AirDate, s.LastAirDate)
 		if err != nil {
 			return &ShowDetail{}, fmt.Errorf("failed to insert season: %v", err)
-		}
-
-		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			log.Printf("RowsAffected error: %v", err)
-		} else {
-			log.Printf("Rows affected: %d", rowsAffected)
 		}
 	}
 

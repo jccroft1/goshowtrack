@@ -59,19 +59,13 @@ func userShowUpdate(w http.ResponseWriter, r *http.Request, add bool) {
 	} else {
 		// SQL to remove show from user
 		sqlQuery := `DELETE FROM user_shows WHERE user_id = ? AND show_id = ?;`
-		res, err := db.Connection.Exec(sqlQuery, userID, showDetails.ID)
+		_, err := db.Connection.Exec(sqlQuery, userID, showDetails.ID)
 		if err != nil {
 			log.Println("Error adding show to user:", err)
 			http.Error(w, "Failed to add show to user", http.StatusInternalServerError)
 			return
 		}
 
-		rowsAffected, err := res.RowsAffected()
-		if err != nil {
-			log.Printf("RowsAffected error: %v", err)
-		} else {
-			log.Printf("Rows affected: %d", rowsAffected)
-		}
 	}
 
 	// redirect to show details page
@@ -85,16 +79,9 @@ func addShow(userID int64, show *tvdbapi.ShowDetail) error {
 	}
 
 	sqlQuery := `INSERT INTO user_shows (user_id, show_id) VALUES (?, ?);`
-	res, err := db.Connection.Exec(sqlQuery, userID, show.ID)
+	_, err := db.Connection.Exec(sqlQuery, userID, show.ID)
 	if err != nil {
 		return fmt.Errorf("error adding show to user: %v", err)
-	}
-
-	rowsAffected, err := res.RowsAffected()
-	if err != nil {
-		log.Printf("RowsAffected error: %v", err)
-	} else {
-		log.Printf("Rows affected: %d", rowsAffected)
 	}
 
 	return nil

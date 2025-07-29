@@ -13,13 +13,23 @@ var Connection *sql.DB
 
 func Setup() func() {
 	var err error
-	Connection, err = sql.Open("sqlite3", "./data/data.db_journal_mode=WAL&_busy_timeout=5000")
+	Connection, err = sql.Open("sqlite3", "./data/data.db?_journal_mode=WAL&_busy_timeout=5000")
 	if err != nil {
 		log.Fatal("failed to connect to database", err)
 	}
 
 	Connection.SetMaxOpenConns(1)
 	Connection.SetMaxIdleConns(1)
+	Connection.SetConnMaxLifetime(10 * time.Minute)
+
+	_, err = Connection.Exec(`
+		PRAGMA synchronous = NORMAL;
+		PRAGMA temp_store = MEMORY;
+		PRAGMA cache_size = -8192;
+	`)
+	if err != nil {
+		log.Fatalf("Failed to set PRAGMAs: %v", err)
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()

@@ -64,16 +64,25 @@ func Validate(req *http.Request) (int64, string, bool) {
 		log.Println("Failed to insert user", err)
 		return 0, "", false
 	}
-	userID, err := result.LastInsertId()
+	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		log.Println("Failed to get last insert UserID", err)
+		log.Println("Failed to get RowsAffected", err)
 		return 0, "", false
 	}
-	if userID == 0 {
-		// fetch user if existing
+
+	var userID int64
+	if rowsAffected > 0 {
+		// New user inserted, get the ID
+		userID, err = result.LastInsertId()
+		if err != nil {
+			log.Println("Failed to get last insert UserID", err)
+			return 0, "", false
+		}
+	} else {
+		// User already exists, fetch ID
 		err = db.Connection.QueryRow(`SELECT id FROM users WHERE email = ?`, email).Scan(&userID)
 		if err != nil {
-			log.Println("Failed to get UserID", err)
+			log.Println("Failed to fetch existing UserID", err)
 			return 0, "", false
 		}
 	}
