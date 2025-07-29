@@ -13,10 +13,13 @@ var Connection *sql.DB
 
 func Setup() func() {
 	var err error
-	Connection, err = sql.Open("sqlite3", "./data/data.db")
+	Connection, err = sql.Open("sqlite3", "./data/data.db_journal_mode=WAL&_busy_timeout=5000")
 	if err != nil {
 		log.Fatal("failed to connect to database", err)
 	}
+
+	Connection.SetMaxOpenConns(1)
+	Connection.SetMaxIdleConns(1)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()

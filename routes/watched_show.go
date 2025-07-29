@@ -60,11 +60,18 @@ func userWatchedUpdate(w http.ResponseWriter, r *http.Request, watched bool) {
 	ON CONFLICT(user_id, show_id) DO UPDATE SET
 		season_number = EXCLUDED.season_number;`
 
-	_, err = db.Connection.Exec(query, userID, showID, seasonNumber)
+	res, err := db.Connection.Exec(query, userID, showID, seasonNumber)
 	if err != nil {
 		log.Println("Error adding season to user", err)
 		http.Error(w, "Error adding season to user", http.StatusInternalServerError)
 		return
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		log.Printf("RowsAffected error: %v", err)
+	} else {
+		log.Printf("Rows affected: %d", rowsAffected)
 	}
 
 	// redirect to show details page
