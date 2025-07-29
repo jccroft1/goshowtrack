@@ -19,7 +19,7 @@ func AllHandler(w http.ResponseWriter, req *http.Request) {
 
 	op := func(userID int64, show *tvdbapi.ShowDetail) (bool, ShowData) {
 		watchedSeasons := 0
-		err := db.Connection.QueryRow(`SELECT season_number FROM user_seasons WHERE user_id = ? AND show_id = ?`, userID, show.ID).Scan(&watchedSeasons)
+		err := db.Connection.QueryRow(`SELECT season_number FROM user_seasons WHERE user_id = ? AND show_id = ?;`, userID, show.ID).Scan(&watchedSeasons)
 		if err != nil && err != sql.ErrNoRows {
 			log.Println("Failed to get shows", err)
 			return false, ShowData{}

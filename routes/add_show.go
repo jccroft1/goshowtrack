@@ -58,7 +58,7 @@ func userShowUpdate(w http.ResponseWriter, r *http.Request, add bool) {
 		}
 	} else {
 		// SQL to remove show from user
-		sqlQuery := `DELETE FROM user_shows WHERE user_id = ? AND show_id = ?`
+		sqlQuery := `DELETE FROM user_shows WHERE user_id = ? AND show_id = ?;`
 		_, err = db.Connection.Exec(sqlQuery, userID, showDetails.ID)
 		if err != nil {
 			log.Println("Error adding show to user:", err)
@@ -77,8 +77,7 @@ func addShow(userID int64, show *tvdbapi.ShowDetail) error {
 		return nil
 	}
 
-	sqlQuery := `INSERT INTO user_shows (user_id, show_id) VALUES (?, ?)`
-
+	sqlQuery := `INSERT INTO user_shows (user_id, show_id) VALUES (?, ?);`
 	_, err := db.Connection.Exec(sqlQuery, userID, show.ID)
 	if err != nil {
 		return fmt.Errorf("error adding show to user: %v", err)
