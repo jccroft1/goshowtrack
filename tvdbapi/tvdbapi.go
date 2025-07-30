@@ -45,7 +45,7 @@ func Setup(_token string) {
 	token = _token
 
 	go func() {
-		t := time.Tick(time.Hour * 48)
+		t := time.Tick(time.Hour * 50)
 		for range t {
 			refreshShows()
 		}
