@@ -65,7 +65,7 @@ func ShowDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		AirDate     string
 		Description string
 		Poster      string
-		Status      string // "Continuing" or "Ended"
+		Status      string
 		Seasons     []Season
 		Unwatched   int
 	}
@@ -84,6 +84,9 @@ func ShowDetailsHandler(w http.ResponseWriter, r *http.Request) {
 		Status:      showDetails.Status,
 		Seasons:     []Season{}, // Initialize with empty slice
 		Unwatched:   len(unwatchedSeasons),
+	}
+	if showDetails.Status == "Returning Series" {
+		showData.Status = getReturningInfo(*showDetails)
 	}
 
 	for _, season := range showDetails.Seasons {

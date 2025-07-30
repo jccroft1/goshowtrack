@@ -3,7 +3,7 @@
 {{ define "content" }}
 
 {{ if ne .Sort "" }}
-<div class="flex flex-wrap gap-2 justify-left shadow-sm">
+<div class="flex flex-wrap gap-2 justify-left">
     {{ $currentSort := .Sort }}
     {{ $baseClasses := "px-4 py-2 text-sm rounded-full dark:focus:ring-offset-gray-900 font-semibold" }}
     {{ $activeClasses := "bg-blue-600 text-white shadow-md hover:bg-blue-700 focus:ring-blue-600" }}
@@ -36,7 +36,7 @@
         <!-- Poster Container (relative parent) -->
         <div class="w-24 h-36 relative overflow-hidden shadow-lg">
             <!-- TV Poster Image -->
-            <a href="/show/details?id={{ .ID }}">
+            <a href="/show/details?id={{ .ID }}" loading="lazy">
                 <img src="{{ .Poster }}" alt="TV Poster" class="w-full h-full object-cover">
             </a>
 
