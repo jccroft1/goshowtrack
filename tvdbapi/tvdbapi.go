@@ -75,7 +75,6 @@ func refreshShows() {
 	rows.Close()
 
 	for _, id := range ids {
-		fmt.Println("Refreshing show: ", id)
 		_, err = GetShowDetails(id, true)
 		if err != nil {
 			log.Println("failed to get show details", err)
@@ -244,7 +243,12 @@ func getRequest(relativeURL string, output interface{}) error {
 	<-limiter
 	res, err := client.Do(req)
 	if err != nil {
-		return err
+		log.Printf("failed to make request, retrying: %v", err)
+		<-limiter
+		res, err = client.Do(req)
+		if err != nil {
+			return err
+		}
 	}
 
 	defer res.Body.Close()

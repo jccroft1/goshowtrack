@@ -50,7 +50,7 @@ func userShowUpdate(w http.ResponseWriter, r *http.Request, add bool) {
 
 	if add {
 		// SQL to add show to user
-		err := addShow(userID, showDetails)
+		err := addShow(userID, showDetails.ID)
 		if err != nil {
 			log.Println("Error adding show to user:", err)
 			http.Error(w, "Failed to add show to user", http.StatusInternalServerError)
@@ -72,14 +72,14 @@ func userShowUpdate(w http.ResponseWriter, r *http.Request, add bool) {
 	http.Redirect(w, r, fmt.Sprintf("/show/details?id=%v", showDetails.ID), http.StatusSeeOther)
 }
 
-func addShow(userID int64, show *tvdbapi.ShowDetail) error {
-	alreadyAdded := userHasAddedShow(userID, show.ID)
+func addShow(userID int64, showID int) error {
+	alreadyAdded := userHasAddedShow(userID, showID)
 	if alreadyAdded {
 		return nil
 	}
 
 	sqlQuery := `INSERT INTO user_shows (user_id, show_id) VALUES (?, ?);`
-	_, err := db.Connection.Exec(sqlQuery, userID, show.ID)
+	_, err := db.Connection.Exec(sqlQuery, userID, showID)
 	if err != nil {
 		return fmt.Errorf("error adding show to user: %v", err)
 	}

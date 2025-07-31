@@ -51,7 +51,7 @@ func BulkAddHandler(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		err = addShow(userID, showDetails)
+		err = addShow(userID, showDetails.ID)
 		if err != nil {
 			log.Println("Failed to add show: ", err)
 			http.Error(w, "Failed to add show", http.StatusInternalServerError)

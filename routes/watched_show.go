@@ -55,6 +55,14 @@ func userWatchedUpdate(w http.ResponseWriter, r *http.Request, watched bool) {
 		seasonNumber--
 	}
 
+	if seasonNumber > 0 {
+		// ensure the user has added the show
+		err := addShow(userID, showID)
+		if err != nil {
+			log.Println("Error adding show to user, ignoring", err)
+		}
+	}
+
 	query := `INSERT INTO user_seasons (user_id, show_id, season_number) 
 	VALUES (?, ?, ?)
 	ON CONFLICT(user_id, show_id) DO UPDATE SET
