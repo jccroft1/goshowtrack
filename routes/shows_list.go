@@ -44,7 +44,7 @@ func AllHandler(w http.ResponseWriter, req *http.Request) {
 		unwatchedSeasons, _ := hasSomethingToWatch(show.Seasons, watchedSeasons)
 		newShowData.Unwatched = len(unwatchedSeasons)
 
-		finished := isFinished(*show)
+		finished := tvdbapi.IsFinished(show.Status)
 
 		switch sortType {
 		case "first_release":
@@ -122,7 +122,7 @@ func HomeHandler(w http.ResponseWriter, req *http.Request) {
 			newShowData.Status = getReturningInfo(*show)
 		}
 
-		finished := isFinished(*show)
+		finished := tvdbapi.IsFinished(show.Status)
 
 		if finished {
 			newShowData.Order = "0"
@@ -171,7 +171,7 @@ func StartHandler(w http.ResponseWriter, req *http.Request) {
 			newShowData.Status = getReturningInfo(*show)
 		}
 
-		finished := isFinished(*show)
+		finished := tvdbapi.IsFinished(show.Status)
 
 		if finished {
 			newShowData.Order = "0"
@@ -200,7 +200,7 @@ func ComingSoonHandler(w http.ResponseWriter, req *http.Request) {
 			return false, ShowData{}
 		}
 
-		finished := isFinished(*show)
+		finished := tvdbapi.IsFinished(show.Status)
 		if finished {
 			return false, ShowData{}
 		}

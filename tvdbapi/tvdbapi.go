@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jccroft1/goshowtrack/db"
@@ -55,7 +56,7 @@ func Setup(_token string) {
 func refreshShows() {
 	log.Println("Refreshing shows...")
 
-	rows, err := db.Connection.Query("SELECT show_id FROM shows")
+	rows, err := db.Connection.Query("SELECT show_id, status FROM shows")
 	if err != nil {
 		log.Println("failed to load show ids", err)
 		return
@@ -64,9 +65,14 @@ func refreshShows() {
 	var ids []int
 	for rows.Next() {
 		var id int
-		err := rows.Scan(&id)
+		var status string
+		err := rows.Scan(&id, &status)
 		if err != nil {
 			log.Println("failed to scan show id", err)
+			continue
+		}
+
+		if IsFinished(status) {
 			continue
 		}
 
@@ -258,4 +264,16 @@ func getRequest(relativeURL string, output interface{}) error {
 	}
 
 	return nil
+}
+
+func IsFinished(status string) bool {
+	status = strings.ToLower(status)
+	switch status {
+	case "returning series":
+		return false
+	case "ended", "canceled":
+		return true
+	default:
+		return false
+	}
 }

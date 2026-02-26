@@ -109,18 +109,6 @@ func hasSomethingToWatch(seasons []tvdbapi.Season, watchedSeasons int) ([]int, b
 	return toWatch, len(toWatch) > 0
 }
 
-func isFinished(show tvdbapi.ShowDetail) bool {
-	status := strings.ToLower(show.Status)
-	switch status {
-	case "returning series":
-		return false
-	case "ended", "canceled":
-		return true
-	default:
-		return false
-	}
-}
-
 func getReturningInfo(show tvdbapi.ShowDetail) string {
 	for _, season := range show.Seasons {
 		if isReleased(season.LastAirDate) {
