@@ -1,10 +1,96 @@
 {{ define "search-bar" }}
-<form method="POST" action="/search" class="flex items-center gap-2">
-    <input type="text" name="query" placeholder="Search for a TV Show..."
-        class="w-full px-4 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black dark:text-white"
-        value="{{ .Query }}">
-    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition">
-        Search
-    </button>
-</form>
+<div class="relative w-full">
+    <form method="POST" action="/search" class="flex items-center gap-2">
+        <input type="text" id="searchInput" name="query" placeholder="Search for a TV Show..." autocomplete="off"
+            class="w-full px-4 py-2 border border-gray-300 rounded-full shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-black dark:text-white"
+            value="{{ .Query }}">
+        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition">
+            Search
+        </button>
+    </form>
+    <div id="autofillDropdown"
+        class="absolute left-0 right-0 mt-1 bg-white dark:bg-black border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg z-50 hidden max-h-60 overflow-y-auto">
+    </div>
+</div>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const autofillDropdown = document.getElementById('autofillDropdown');
+    let debounceTimer;
+
+    // Debounce function to limit API calls
+    function debounce(func, wait) {
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(debounceTimer);
+                func(...args);
+            };
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(later, wait);
+        };
+    }
+
+    // Hide and clear the dropdown
+    function hideDropdown() {
+        autofillDropdown.innerHTML = '';
+        autofillDropdown.classList.add('hidden');
+    }
+
+    // Fetch autofill suggestions from API
+    async function fetchAutofill(query) {
+        if (query.length < 3) {
+            hideDropdown();
+            return;
+        }
+
+        try {
+            const response = await fetch(`/autofill?query=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            displayAutofill(data);
+        } catch (error) {
+            console.error('Error fetching autofill suggestions:', error);
+            hideDropdown();
+        }
+    }
+
+    // Display autofill suggestions
+    function displayAutofill(suggestions) {
+        if (suggestions.length === 0) {
+            hideDropdown();
+            return;
+        }
+
+        autofillDropdown.innerHTML = suggestions.map(show => `
+            <div class="autofill-item px-4 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 text-black dark:text-white select-none" data-name="${show}">
+                ${show}
+            </div>
+        `).join('');
+
+        autofillDropdown.classList.remove('hidden');
+    }
+
+    // Handle input event with debounce
+    searchInput.addEventListener('input', debounce((e) => {
+        fetchAutofill(e.target.value);
+    }, 150));
+
+    // Handle click on autofill item
+    autofillDropdown.addEventListener('click', (e) => {
+        const item = e.target.closest('.autofill-item');
+        if (item) {
+            const showName = item.dataset.name;
+            searchInput.value = showName;
+            hideDropdown();
+
+            searchInput.closest('form').submit();
+        }
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.relative')) {
+            hideDropdown();
+        }
+    });
+</script>
 {{ end }}

@@ -44,10 +44,12 @@ func main() {
 	mux.HandleFunc("GET /comingsoon", logging.Middleware(auth.Middleware(routes.ComingSoonHandler)))
 	mux.HandleFunc("GET /all", logging.Middleware(auth.Middleware(routes.AllHandler)))
 
+	// search pages
 	mux.HandleFunc("GET /search", logging.Middleware(auth.Middleware(routes.SearchHandler)))
 	mux.HandleFunc("POST /search", logging.Middleware(auth.Middleware(routes.SearchResultsHandler)))
 	mux.HandleFunc("POST /bulk_add", logging.Middleware(auth.Middleware(routes.BulkAddHandler)))
 	mux.HandleFunc("GET /show/details", logging.Middleware(auth.Middleware(routes.ShowDetailsHandler)))
+	mux.HandleFunc("GET /autofill", logging.Middleware(auth.Middleware(routes.AutofillHandler)))
 
 	// show actions
 	mux.HandleFunc("GET /show/add", logging.Middleware(auth.Middleware(routes.AddShowHandler)))

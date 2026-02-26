@@ -9,8 +9,10 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
+	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/jccroft1/goshowtrack/db"
@@ -33,13 +35,22 @@ type SearchShowsResponse struct {
 	Results []Show `json:"results"`
 }
 
+type PopularShowDetails struct {
+	name       string
+	popularity float32
+}
+
 var (
 	client = &http.Client{
 		Timeout: time.Second,
 	}
-	limiter = time.Tick(80 * time.Millisecond)
+	limiter = time.Tick(120 * time.Millisecond)
 
 	token string
+
+	// normalized name used as key
+	popularShows   map[string]PopularShowDetails
+	popularShowsMu sync.RWMutex
 )
 
 func Setup(_token string) {
@@ -51,6 +62,130 @@ func Setup(_token string) {
 			refreshShows()
 		}
 	}()
+
+	loadPopularShows()
+	go func() {
+		t := time.Tick(time.Hour * 200)
+		for range t {
+			loadPopularShows()
+		}
+	}()
+}
+
+type NameScore struct {
+	Name  string
+	Score float32
+}
+
+func FindPopularShows(search string) []string {
+	if len(search) > 40 {
+		search = search[:40]
+	}
+
+	search = NormalizeShowName(search)
+
+	if len(search) < 3 {
+		// too short to search
+		return []string{}
+	}
+
+	popularShowsMu.RLock()
+	defer popularShowsMu.RUnlock()
+
+	var scores []NameScore
+
+	// Step 1: compute score
+	for normName, show := range popularShows {
+		// only check shows that match the first character
+		if search[0] != normName[0] && search[0] != show.name[0] {
+			continue
+		}
+
+		longer, shorter := search, normName
+		if len(normName) > len(search) {
+			longer, shorter = normName, search
+		}
+
+		dm_dist := DamerauLevenshtein(longer, shorter)
+		longerLen := float32(len(longer))
+		dm_score := (longerLen - float32(dm_dist)) / longerLen
+
+		prefix := longer[:len(shorter)]
+		prefix_dm_dist := DamerauLevenshtein(prefix, shorter)
+		shortLen := float32(len(shorter))
+		prefix_dm_score := (shortLen - float32(prefix_dm_dist)) / shortLen
+
+		score := 0.0 + // weighting for the score is adjustable
+			(prefix_dm_score * 0.5) +
+			(dm_score * 0.3) +
+			(show.popularity * 0.2)
+
+		scores = append(scores, NameScore{show.name, score})
+	}
+
+	// Step 2: sort
+	sort.Slice(scores, func(i, j int) bool {
+		return scores[i].Score > scores[j].Score
+	})
+
+	// Step 3: extract top N matches
+	top := 5
+
+	result := []string{}
+	for i := 0; i < top && i < len(scores); i++ {
+		result = append(result, scores[i].Name)
+	}
+
+	return result
+}
+
+func loadPopularShows() {
+	maxPages := 100
+	perPage := 20
+	maxRank := float32(maxPages * perPage)
+
+	log.Println("Loading popular shows...")
+
+	popularShowsMu.Lock()
+	defer popularShowsMu.Unlock()
+	popularShows = make(map[string]PopularShowDetails)
+
+	var results SearchShowsResponse
+	for i := 1; i < maxPages; i++ {
+		url := fmt.Sprintf("tv/popular?language=en-US&page=%d", i)
+		err := getRequest(url, &results)
+		if err != nil {
+			log.Println("failed to scan show id", err)
+			return
+		}
+
+		for j, show := range results.Results {
+			showName := removeSubtitle(show.Name)
+
+			normName := NormalizeShowName(showName)
+			if len(normName) < 2 {
+				// too short to index
+				continue
+			}
+
+			_, exists := popularShows[normName]
+			if exists {
+				// prioritize existing show as it's more popular
+				continue
+			}
+
+			// popularity score out of 1.0
+			rank := ((i - 1) * perPage) + j
+			popularity := (maxRank - float32(rank)) / maxRank
+
+			popularShows[normName] = PopularShowDetails{
+				name:       showName,
+				popularity: float32(popularity),
+			}
+		}
+	}
+
+	log.Println("Popular show load complete.")
 }
 
 func refreshShows() {

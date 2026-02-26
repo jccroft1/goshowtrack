@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
@@ -72,4 +73,25 @@ func SearchResultsHandler(w http.ResponseWriter, req *http.Request) {
 	}
 
 	renderTemplate(w, "searchResults", data)
+}
+
+func AutofillHandler(w http.ResponseWriter, r *http.Request) {
+	searchName := r.URL.Query().Get("query")
+
+	if len(searchName) < 3 {
+		err := json.NewEncoder(w).Encode([]string{})
+		if err != nil {
+			log.Println("empty autofill handler response failed", err)
+			return
+		}
+		return
+	}
+
+	found := tvdbapi.FindPopularShows(searchName)
+
+	err := json.NewEncoder(w).Encode(found)
+	if err != nil {
+		log.Println("autofill handler response failed", err)
+		return
+	}
 }
